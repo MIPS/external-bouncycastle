@@ -29,6 +29,7 @@ public class RegressionTest
         new ImplicitlyCaTest(),
         new ECNRTest(),
         new ECIESTest(),
+        new ECIESVectorTest(),
         new ECDSA5Test(),
         new GOST3410Test(),
         new ElGamalTest(),
@@ -72,11 +73,12 @@ public class RegressionTest
         new CRL5Test(),
         new Poly1305Test(),
         new SipHashTest(),
-        new SHA3Test(),
+        new KeccakTest(),
         new SkeinTest(),
         new Shacal2Test(),
         new DetDSATest(),
-        new ThreefishTest()
+        new ThreefishTest(),
+        new SM4Test()
     };
 
     public static void main(

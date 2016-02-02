@@ -32,6 +32,7 @@ import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -62,6 +63,7 @@ import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.Integers;
+import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Hex;
 
 public class X509CertificateObject
@@ -101,7 +103,7 @@ public class X509CertificateObject
             byte[] bytes = this.getExtensionBytes("2.5.29.15");
             if (bytes != null)
             {
-                DERBitString    bits = DERBitString.getInstance(ASN1Primitive.fromByteArray(bytes));
+                ASN1BitString bits = DERBitString.getInstance(ASN1Primitive.fromByteArray(bytes));
 
                 bytes = bits.getBytes();
                 int length = (bytes.length * 8) - bits.getPadBits();
@@ -231,7 +233,7 @@ public class X509CertificateObject
 
     public byte[] getSignature()
     {
-        return c.getSignature().getBytes();
+        return c.getSignature().getOctets();
     }
 
     /**
@@ -653,7 +655,7 @@ public class X509CertificateObject
     public String toString()
     {
         StringBuffer    buf = new StringBuffer();
-        String          nl = System.getProperty("line.separator");
+        String          nl = Strings.lineSeparator();
 
         buf.append("  [0]         Version: ").append(this.getVersion()).append(nl);
         buf.append("         SerialNumber: ").append(this.getSerialNumber()).append(nl);
@@ -772,9 +774,39 @@ public class X509CertificateObject
         throws CertificateException, NoSuchAlgorithmException,
         InvalidKeyException, NoSuchProviderException, SignatureException
     {
-        String    sigName = X509SignatureUtil.getSignatureName(c.getSignatureAlgorithm());
-        Signature signature = Signature.getInstance(sigName, sigProvider);
+        String sigName = X509SignatureUtil.getSignatureName(c.getSignatureAlgorithm());
+        Signature signature;
+
+        if (sigProvider != null)
+        {
+            signature = Signature.getInstance(sigName, sigProvider);
+        }
+        else
+        {
+            signature = Signature.getInstance(sigName);
+        }
         
+        checkSignature(key, signature);
+    }
+
+    public final void verify(
+        PublicKey   key,
+        Provider    sigProvider)
+        throws CertificateException, NoSuchAlgorithmException,
+        InvalidKeyException, SignatureException
+    {
+        String sigName = X509SignatureUtil.getSignatureName(c.getSignatureAlgorithm());
+        Signature signature;
+
+        if (sigProvider != null)
+        {
+            signature = Signature.getInstance(sigName, sigProvider);
+        }
+        else
+        {
+            signature = Signature.getInstance(sigName);
+        }
+
         checkSignature(key, signature);
     }
 

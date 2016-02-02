@@ -3,6 +3,7 @@ package org.bouncycastle.cms.test;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -12,10 +13,12 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -58,6 +61,7 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.CollectionStore;
 import org.bouncycastle.util.Store;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.io.Streams;
 
 public class NewSignedDataStreamTest
     extends TestCase
@@ -124,7 +128,13 @@ public class NewSignedDataStreamTest
     {
         super(name);
     }
-    
+
+    public void setUp()
+        throws Exception
+    {
+        init();
+    }
+
     private static void init()
         throws Exception
     {
@@ -163,7 +173,11 @@ public class NewSignedDataStreamTest
         Store               certStore = sp.getCertificates();
         Store               crlStore = sp.getCRLs();
         SignerInformationStore  signers = sp.getSignerInfos();
-        
+
+        Set digestIDs = new HashSet(sp.getDigestAlgorithmIDs());
+
+        assertTrue(digestIDs.size() > 0);
+
         Collection              c = signers.getSigners();
         Iterator                it = c.iterator();
     
@@ -176,13 +190,16 @@ public class NewSignedDataStreamTest
             X509CertificateHolder cert = (X509CertificateHolder)certIt.next();
     
             assertEquals(true, signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BC).build(cert)));
-            
+
+            digestIDs.remove(signer.getDigestAlgorithmID());
+
             if (contentDigest != null)
             {
                 assertTrue(MessageDigest.isEqual(contentDigest, signer.getContentDigest()));
             }
         }
 
+        assertTrue(digestIDs.size() == 0);
         assertEquals(certStore.getMatches(null).size(), sp.getCertificates().getMatches(null).size());
         assertEquals(crlStore.getMatches(null).size(), sp.getCRLs().getMatches(null).size());
     }
@@ -221,40 +238,6 @@ public class NewSignedDataStreamTest
         sp.getSignerInfos();
         sp.close();
     }
-
-//    public void testEarlyInvalidKeyException() throws Exception
-//    {
-//        try
-//        {
-//            CMSSignedDataStreamGenerator gen = new CMSSignedDataStreamGenerator();
-//            gen.addSigner( _origKP.getPrivate(), _origCert,
-//                "DSA", // DOESN'T MATCH KEY ALG
-//                CMSSignedDataStreamGenerator.DIGEST_SHA1, BC);
-//
-//            fail("Expected InvalidKeyException in addSigner");
-//        }
-//        catch (InvalidKeyException e)
-//        {
-//            // Ignore
-//        }
-//    }
-
-//    public void testEarlyNoSuchAlgorithmException() throws Exception
-//    {
-//        try
-//        {
-//            CMSSignedDataStreamGenerator gen = new CMSSignedDataStreamGenerator();
-//            gen.addSigner( _origKP.getPrivate(), _origCert,
-//                CMSSignedDataStreamGenerator.DIGEST_SHA1, // BAD OID!
-//                CMSSignedDataStreamGenerator.DIGEST_SHA1, BC);
-//
-//            fail("Expected NoSuchAlgorithmException in addSigner");
-//        }
-//        catch (NoSuchAlgorithmException e)
-//        {
-//            // Ignore
-//        }
-//    }
 
     public void testSha1EncapsulatedSignature()
         throws Exception
@@ -976,13 +959,13 @@ public class NewSignedDataStreamTest
 
         assertEquals(4, sp.getVersion());
 
-//        store = sp.getAttributeCertificates();
-//
-//        Collection coll = store.getMatches(null);
-//
-//        assertEquals(1, coll.size());
-//
-//        assertTrue(coll.contains(new JcaX509AttributeCertificateHolder(attrCert)));
+        store = sp.getAttributeCertificates();
+
+        Collection coll = store.getMatches(null);
+
+        assertEquals(1, coll.size());
+
+        assertTrue(coll.contains(attrCert));
     }
 
     public void testSignerStoreReplacement()
@@ -1299,6 +1282,39 @@ public class NewSignedDataStreamTest
         gen.open(bOut).close();
 
         checkSigParseable(bOut.toByteArray());
+    }
+
+    public void testMSPKCS7()
+        throws Exception
+    {
+        byte[] data = getInput("SignedMSPkcs7.sig");
+
+        CMSSignedDataParser sp = new CMSSignedDataParser(new JcaDigestCalculatorProviderBuilder().setProvider("BC").build(), data);
+
+        sp.getSignedContent().drain();
+
+        Store certStore = sp.getCertificates();
+        SignerInformationStore signers = sp.getSignerInfos();
+
+        Collection c = signers.getSigners();
+        Iterator it = c.iterator();
+
+        while (it.hasNext())
+        {
+            SignerInformation signer = (SignerInformation)it.next();
+            Collection certCollection = certStore.getMatches(signer.getSID());
+
+            Iterator certIt = certCollection.iterator();
+            X509CertificateHolder cert = (X509CertificateHolder)certIt.next();
+
+            assertEquals(true, signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert)));
+        }
+    }
+
+    private byte[] getInput(String name)
+        throws IOException
+    {
+        return Streams.readAll(getClass().getResourceAsStream(name));
     }
 
     public static Test suite()

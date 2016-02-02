@@ -32,8 +32,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.crypto.Cipher;
@@ -87,8 +89,8 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.jcajce.PKCS12Key;
 import org.bouncycastle.jcajce.PKCS12StoreParameter;
-import org.bouncycastle.jcajce.provider.symmetric.util.BCPBEKey;
 import org.bouncycastle.jcajce.spec.GOST28147ParameterSpec;
 import org.bouncycastle.jcajce.spec.PBKDF2KeySpec;
 import org.bouncycastle.jcajce.util.BCJcaJceHelper;
@@ -212,8 +214,7 @@ public class PKCS12KeyStoreSpi
     {
         try
         {
-            SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(
-                (ASN1Sequence)ASN1Primitive.fromByteArray(pubKey.getEncoded()));
+            SubjectPublicKeyInfo info = SubjectPublicKeyInfo.getInstance(pubKey.getEncoded());
 
             return new SubjectKeyIdentifier(getDigest(info));
         }
@@ -271,7 +272,8 @@ public class PKCS12KeyStoreSpi
 
     /**
      * this is not quite complete - we should follow up on the chain, a bit
-     * tricky if a certificate appears in more than one chain...
+     * tricky if a certificate appears in more than one chain... the store method
+     * now prunes out unused certificates from the chain map if they are present.
      */
     public void engineDeleteEntry(
         String alias)
@@ -446,14 +448,21 @@ public class PKCS12KeyStoreSpi
                     }
                 }
 
-                cs.addElement(c);
-                if (nextC != c)     // self signed - end of the chain
+                if (cs.contains(c))
                 {
-                    c = nextC;
+                    c = null;          // we've got a certificate chain loop time to stop
                 }
                 else
                 {
-                    c = null;
+                    cs.addElement(c);
+                    if (nextC != c)     // self signed - end of the chain
+                    {
+                        c = nextC;
+                    }
+                    else
+                    {
+                        c = null;
+                    }
                 }
             }
 
@@ -601,23 +610,15 @@ public class PKCS12KeyStoreSpi
             if (algorithm.on(PKCSObjectIdentifiers.pkcs_12PbeIds))
             {
                 PKCS12PBEParams pbeParams = PKCS12PBEParams.getInstance(algId.getParameters());
-
-                PBEKeySpec pbeSpec = new PBEKeySpec(password);
-                PrivateKey out;
-
-                SecretKeyFactory keyFact = helper.createSecretKeyFactory(
-                    algorithm.getId());
                 PBEParameterSpec defParams = new PBEParameterSpec(
                     pbeParams.getIV(),
                     pbeParams.getIterations().intValue());
 
-                SecretKey k = keyFact.generateSecret(pbeSpec);
-
-                ((BCPBEKey)k).setTryWrongPKCS12Zero(wrongPKCS12Zero);
-
                 Cipher cipher = helper.createCipher(algorithm.getId());
 
-                cipher.init(Cipher.UNWRAP_MODE, k, defParams);
+                PKCS12Key key = new PKCS12Key(password, wrongPKCS12Zero);
+
+                cipher.init(Cipher.UNWRAP_MODE, key, defParams);
 
                 // we pass "" as the key algorithm type as it is unknown at this point
                 return (PrivateKey)cipher.unwrap(data, "", Cipher.PRIVATE_KEY);
@@ -688,13 +689,10 @@ public class PKCS12KeyStoreSpi
 
             try
             {
-                SecretKeyFactory keyFact = helper.createSecretKeyFactory(algorithm.getId());
                 PBEParameterSpec defParams = new PBEParameterSpec(
                     pbeParams.getIV(),
                     pbeParams.getIterations().intValue());
-                BCPBEKey key = (BCPBEKey)keyFact.generateSecret(pbeSpec);
-
-                key.setTryWrongPKCS12Zero(wrongPKCS12Zero);
+                PKCS12Key key = new PKCS12Key(password, wrongPKCS12Zero);
 
                 Cipher cipher = helper.createCipher(algorithm.getId());
 
@@ -1275,7 +1273,6 @@ public class PKCS12KeyStoreSpi
         //
         ASN1EncodableVector keyS = new ASN1EncodableVector();
 
-
         Enumeration ks = keys.keys();
 
         while (ks.hasMoreElements())
@@ -1525,6 +1522,8 @@ public class PKCS12KeyStoreSpi
             }
         }
 
+        Set usedSet = getUsedCertificateSet();
+
         cs = chainCerts.keys();
         while (cs.hasMoreElements())
         {
@@ -1532,6 +1531,11 @@ public class PKCS12KeyStoreSpi
             {
                 CertId certId = (CertId)cs.nextElement();
                 Certificate cert = (Certificate)chainCerts.get(certId);
+
+                if (!usedSet.contains(cert))
+                {
+                    continue;
+                }
 
                 if (doneCerts.get(cert) != null)
                 {
@@ -1651,6 +1655,34 @@ public class PKCS12KeyStoreSpi
         asn1Out.writeObject(pfx);
     }
 
+    private Set getUsedCertificateSet()
+    {
+        Set usedSet = new HashSet();
+
+        for (Enumeration en = keys.keys(); en.hasMoreElements();)
+        {
+            String alias = (String)en.nextElement();
+
+                Certificate[] certs = engineGetCertificateChain(alias);
+
+                for (int i = 0; i != certs.length; i++)
+                {
+                    usedSet.add(certs[i]);
+                }
+        }
+
+        for (Enumeration en = certs.keys(); en.hasMoreElements();)
+        {
+            String alias = (String)en.nextElement();
+
+            Certificate cert = engineGetCertificate(alias);
+
+            usedSet.add(cert);
+        }
+
+        return usedSet;
+    }
+
     private byte[] calculatePbeMac(
         ASN1ObjectIdentifier oid,
         byte[] salt,
@@ -1660,15 +1692,12 @@ public class PKCS12KeyStoreSpi
         byte[] data)
         throws Exception
     {
-        SecretKeyFactory keyFact = helper.createSecretKeyFactory(oid.getId());
         PBEParameterSpec defParams = new PBEParameterSpec(salt, itCount);
-        PBEKeySpec pbeSpec = new PBEKeySpec(password);
-        BCPBEKey key = (BCPBEKey)keyFact.generateSecret(pbeSpec);
-        key.setTryWrongPKCS12Zero(wrongPkcs12Zero);
 
         Mac mac = helper.createMac(oid.getId());
-        mac.init(key, defParams);
+        mac.init(new PKCS12Key(password, wrongPkcs12Zero), defParams);
         mac.update(data);
+
         return mac.doFinal();
     }
 
@@ -1769,7 +1798,7 @@ public class PKCS12KeyStoreSpi
 
             keySizes.put(new ASN1ObjectIdentifier("1.2.840.113533.7.66.10"), Integers.valueOf(128));
 
-            keySizes.put(PKCSObjectIdentifiers.des_EDE3_CBC.getId(), Integers.valueOf(192));
+            keySizes.put(PKCSObjectIdentifiers.des_EDE3_CBC, Integers.valueOf(192));
 
             keySizes.put(NISTObjectIdentifiers.id_aes128_CBC, Integers.valueOf(128));
             keySizes.put(NISTObjectIdentifiers.id_aes192_CBC, Integers.valueOf(192));

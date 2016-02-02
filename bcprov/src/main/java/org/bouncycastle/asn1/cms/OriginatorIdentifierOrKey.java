@@ -5,6 +5,7 @@ import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
@@ -94,8 +95,6 @@ public class OriginatorIdentifierOrKey
      * <li> null &rarr; null
      * <li> {@link OriginatorIdentifierOrKey} object
      * <li> {@link IssuerAndSerialNumber} object
-     * <li> {@link SubjectKeyIdentifier} object
-     * <li> {@link OriginatorPublicKey} object
      * <li> {@link org.bouncycastle.asn1.ASN1TaggedObject#getInstance(java.lang.Object) ASN1TaggedObject} input formats with IssuerAndSerialNumber structure inside
      * </ul>
      *
@@ -110,25 +109,23 @@ public class OriginatorIdentifierOrKey
             return (OriginatorIdentifierOrKey)o;
         }
 
-        if (o instanceof IssuerAndSerialNumber)
+        if (o instanceof IssuerAndSerialNumber || o instanceof ASN1Sequence)
         {
-            return new OriginatorIdentifierOrKey((IssuerAndSerialNumber)o);
-        }
-
-        if (o instanceof SubjectKeyIdentifier)
-        {
-            return new OriginatorIdentifierOrKey((SubjectKeyIdentifier)o);
-        }
-
-        if (o instanceof OriginatorPublicKey)
-        {
-            return new OriginatorIdentifierOrKey((OriginatorPublicKey)o);
+            return new OriginatorIdentifierOrKey(IssuerAndSerialNumber.getInstance(o));
         }
 
         if (o instanceof ASN1TaggedObject)
         {
-            // TODO Add validation
-            return new OriginatorIdentifierOrKey((ASN1TaggedObject)o);
+            ASN1TaggedObject tagged = (ASN1TaggedObject)o;
+
+            if (tagged.getTagNo() == 0)
+            {
+                return new OriginatorIdentifierOrKey(SubjectKeyIdentifier.getInstance(tagged, false));
+            }
+            else if (tagged.getTagNo() == 1)
+            {
+                return new OriginatorIdentifierOrKey(OriginatorPublicKey.getInstance(tagged, false));
+            }
         }
 
         throw new IllegalArgumentException("Invalid OriginatorIdentifierOrKey: " + o.getClass().getName());

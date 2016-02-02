@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -89,6 +92,7 @@ public class CMSSignedDataParser
     private ASN1ObjectIdentifier    _signedContentType;
     private CMSTypedStream          _signedContent;
     private Map                     digests;
+    private Set<AlgorithmIdentifier> digestAlgorithms;
 
     private SignerInformationStore  _signerInfoStore;
     private ASN1Set                 _certSet, _crlSet;
@@ -145,10 +149,15 @@ public class CMSSignedDataParser
             
             ASN1SetParser digAlgs = _signedData.getDigestAlgorithms();
             ASN1Encodable  o;
-            
+
+            Set<AlgorithmIdentifier> algSet = new HashSet<AlgorithmIdentifier>();
+
             while ((o = digAlgs.readObject()) != null)
             {
                 AlgorithmIdentifier algId = AlgorithmIdentifier.getInstance(o);
+
+                algSet.add(algId);
+
                 try
                 {
                     DigestCalculator calculator = digestCalculatorProvider.get(algId);
@@ -164,28 +173,50 @@ public class CMSSignedDataParser
                 }
             }
 
+            digestAlgorithms = Collections.unmodifiableSet(algSet);
+
             //
             // If the message is simply a certificate chain message getContent() may return null.
             //
             ContentInfoParser     cont = _signedData.getEncapContentInfo();
-            ASN1OctetStringParser octs = (ASN1OctetStringParser)
-                cont.getContent(BERTags.OCTET_STRING);
+            ASN1Encodable contentParser = cont.getContent(BERTags.OCTET_STRING);
 
-            if (octs != null)
+            if (contentParser instanceof ASN1OctetStringParser)
             {
-                CMSTypedStream ctStr = new CMSTypedStream(
-                    cont.getContentType().getId(), octs.getOctetStream());
+                ASN1OctetStringParser octs = (ASN1OctetStringParser)contentParser;
+
+                if (octs != null)
+                {
+                    CMSTypedStream ctStr = new CMSTypedStream(
+                        cont.getContentType(), octs.getOctetStream());
+
+                    if (_signedContent == null)
+                    {
+                        _signedContent = ctStr;
+                    }
+                    else
+                    {
+                        //
+                        // content passed in, need to read past empty encapsulated content info object if present
+                        //
+                        ctStr.drain();
+                    }
+                }
+            }
+            else if (contentParser != null)
+            {
+                PKCS7TypedStream pkcs7Stream = new PKCS7TypedStream(cont.getContentType(), contentParser);
 
                 if (_signedContent == null)
                 {
-                    _signedContent = ctStr; 
+                    _signedContent = pkcs7Stream;
                 }
                 else
                 {
                     //
                     // content passed in, need to read past empty encapsulated content info object if present
                     //
-                    ctStr.drain();
+                    pkcs7Stream.drain();
                 }
             }
 
@@ -212,6 +243,16 @@ public class CMSSignedDataParser
     public int getVersion()
     {
         return _signedData.getVersion().getValue().intValue();
+    }
+
+    /**
+     * Return the digest algorithm identifiers for the SignedData object
+     *
+     * @return the set of digest algorithm identifiers
+     */
+    public Set<AlgorithmIdentifier> getDigestAlgorithmIDs()
+    {
+        return digestAlgorithms;
     }
 
     /**

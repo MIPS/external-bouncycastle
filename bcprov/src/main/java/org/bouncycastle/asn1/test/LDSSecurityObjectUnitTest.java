@@ -5,12 +5,14 @@ import java.util.Random;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.icao.DataGroupHash;
 import org.bouncycastle.asn1.icao.LDSSecurityObject;
 import org.bouncycastle.asn1.icao.LDSVersionInfo;
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.util.test.SimpleTest;
 
@@ -38,7 +40,7 @@ public class LDSSecurityObjectUnitTest
     public void performTest() 
         throws Exception
     {
-        AlgorithmIdentifier  algoId = new AlgorithmIdentifier("1.3.14.3.2.26");
+        AlgorithmIdentifier  algoId = new AlgorithmIdentifier(OIWObjectIdentifiers.idSHA1);
         DataGroupHash[] datas = new DataGroupHash[2];
       
         datas[0] = new DataGroupHash(1, new DEROctetString(generateHash()));
@@ -122,7 +124,7 @@ public class LDSSecurityObjectUnitTest
         
         checkStatement(so, digestAlgorithmIdentifier, datagroupHash, null);
         
-        ASN1InputStream aIn = new ASN1InputStream(so.toASN1Object().getEncoded());
+        ASN1InputStream aIn = new ASN1InputStream(so.toASN1Primitive().getEncoded());
 
         ASN1Sequence seq = (ASN1Sequence)aIn.readObject();
         
@@ -149,7 +151,7 @@ public class LDSSecurityObjectUnitTest
 
         checkStatement(so, digestAlgorithmIdentifier, datagroupHash, versionInfo);
 
-        ASN1InputStream aIn = new ASN1InputStream(so.toASN1Object().getEncoded());
+        ASN1InputStream aIn = new ASN1InputStream(so.toASN1Primitive().getEncoded());
 
         ASN1Sequence seq = (ASN1Sequence)aIn.readObject();
 

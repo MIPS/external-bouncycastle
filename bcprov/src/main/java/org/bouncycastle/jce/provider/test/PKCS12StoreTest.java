@@ -17,10 +17,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -35,9 +32,11 @@ import org.bouncycastle.asn1.pkcs.EncryptedPrivateKeyInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.Pfx;
 import org.bouncycastle.asn1.pkcs.SafeBag;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.jcajce.PKCS12StoreParameter;
 import org.bouncycastle.jce.PKCS12Util;
-import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.JDKPKCS12StoreParameter;
@@ -45,7 +44,6 @@ import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.test.SimpleTest;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 /**
  * Exercise the various key stores, making sure we at least get back what we put in!
@@ -470,6 +468,86 @@ public class PKCS12StoreTest
       + "CgYGKoUDAgIJBQAEIJbGZorQsNM63+xozwEI561cTFVCbyHAEEpkvF3eijT8"
       + "BAgY5sDtkrVeBQICCAA=");
 
+    byte[] certChainCycle = Base64.decode(
+        "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"
+      + "GOtPKKbIhe5YCbkCAgQA");
+
+    byte[] gostOpenSSLIntegerDPfx = Base64.decode(
+        "MIIC/wIBAzCCAsUGCSqGSIb3DQEHAaCCArYEggKyMIICrjCCAc8GCSqGSIb3"
+      + "DQEHBqCCAcAwggG8AgEAMIIBtQYJKoZIhvcNAQcBMBwGCiqGSIb3DQEMAQYw"
+      + "DgQIb1OLAOp7o6ACAggAgIIBiFSfDqzkF2Lv9arM6fdxKrixa9Zu8sGkrsbN"
+      + "1mYEPYRRJFyfTHB2cOn4yl2I6Ldo9m9GKtnTGGYugMTAFLdBNe0f7X0c4fjr"
+      + "norM2ODUDfzuqI0a54DLwixvV4U9Q0qakLKQJDAHnCSsWu7N8tRktpYt9oIZ"
+      + "3sVJ9r01+yxBrDOapAqT3UtaFILSiUU94Zdyehu9hmL3cq33s7Y+orfESC8A"
+      + "O7OYYks7c6sEjNsvUHag2bC3GClzEapiboIs2F2vb12NoiQ0skU3dbO7Jr1T"
+      + "P6qkjBYFvG31c3vG8pNxJ7iwJr5+FonJ6uVg3y8EmYCROD5Eyd0MeGaa+eBr"
+      + "z/CPFaaM50NT6RAL3CTmfqOEzOlXE2qyKZiPD65TxowbjYOmDh8Tb/mfOQUK"
+      + "hx8Tgzttk0CHHHZmUQkMm0RXDj/n07JaeGuQJQ1pK/3Wg7ejfGxj7eFgzmPU"
+      + "jOhIAAe/fwOkxUC8quv/+db/L+EeSQBSEyacU5MliXwOPVytMUOP4pFMtonw"
+      + "C6NzBU5JMIHYBgkqhkiG9w0BBwGggcoEgccwgcQwgcEGCyqGSIb3DQEMCgEC"
+      + "oHIwcDAcBgoqhkiG9w0BDAEDMA4ECF6BMzmkD7DbAgIIAARQlev2YN09882U"
+      + "niwvu9nMIgS3hmjSlqlpkf5aYQLosSy5eaOWCq0Vskqgv5i+77vKyQYcKOH0"
+      + "VnQYu98kWUgZy4fNfesufL+m3d29LX/JGdoxPjAXBgkqhkiG9w0BCRQxCh4I"
+      + "AHQAZQBzAHQwIwYJKoZIhvcNAQkVMRYEFIaC9GvZM/XUGW4U50bkjCfsTrW8"
+      + "MDEwITAJBgUrDgMCGgUABBT3iAwuHw7KQXrl09gBkHaUVbOoBAQIIm90qua1"
+      + "2i4CAggA");
+
     /**
      * we generate a self signed certificate for the sake of testing - RSA
      */
@@ -483,47 +561,23 @@ public class PKCS12StoreTest
         //
         // distinguished name table.
         //
-        Hashtable                   issuerAttrs = new Hashtable();
+        X500NameBuilder issuerBldr = new X500NameBuilder();
 
-        issuerAttrs.put(X509Principal.C, "AU");
-        issuerAttrs.put(X509Principal.O, "The Legion of the Bouncy Castle");
-        issuerAttrs.put(X509Principal.L, "Melbourne");
-        issuerAttrs.put(X509Principal.ST, "Victoria");
-        issuerAttrs.put(X509Principal.EmailAddress, issuerEmail);
+        issuerBldr.addRDN(BCStyle.C, "AU");
+        issuerBldr.addRDN(BCStyle.O, "The Legion of the Bouncy Castle");
+        issuerBldr.addRDN(BCStyle.L, "Melbourne");
+        issuerBldr.addRDN(BCStyle.ST, "Victoria");
+        issuerBldr.addRDN(BCStyle.EmailAddress, issuerEmail);
 
-        Hashtable                   subjectAttrs = new Hashtable();
+        X500NameBuilder subjectBldr = new X500NameBuilder();
 
-        subjectAttrs.put(X509Principal.C, "AU");
-        subjectAttrs.put(X509Principal.O, "The Legion of the Bouncy Castle");
-        subjectAttrs.put(X509Principal.L, "Melbourne");
-        subjectAttrs.put(X509Principal.ST, "Victoria");
-        subjectAttrs.put(X509Principal.EmailAddress, subjectEmail);
+        subjectBldr.addRDN(BCStyle.C, "AU");
+        subjectBldr.addRDN(BCStyle.O, "The Legion of the Bouncy Castle");
+        subjectBldr.addRDN(BCStyle.L, "Melbourne");
+        subjectBldr.addRDN(BCStyle.ST, "Victoria");
+        subjectBldr.addRDN(BCStyle.EmailAddress, subjectEmail);
 
-        Vector order = new Vector();
-        order.add(X509Principal.C);
-        order.add(X509Principal.O);
-        order.add(X509Principal.L);
-        order.add(X509Principal.ST);
-        order.add(X509Principal.EmailAddress);
-
-        //
-        // extensions
-        //
-
-        //
-        // create the certificate - version 3
-        //
-        X509V3CertificateGenerator  certGen = new X509V3CertificateGenerator();
-
-        certGen.setSerialNumber(BigInteger.valueOf(1));
-        certGen.setIssuerDN(new X509Principal(order, issuerAttrs));
-        certGen.setNotBefore(new Date(System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30));
-        certGen.setNotAfter(new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)));
-        certGen.setSubjectDN(new X509Principal(order, subjectAttrs));
-        certGen.setPublicKey(pubKey);
-        certGen.setSignatureAlgorithm("MD5WithRSAEncryption");
-
-        return certGen.generate(privKey);
+        return TestUtils.createCert(issuerBldr.build(), privKey, subjectBldr.build(), "SHA1withRSA", null, pubKey);
     }
 
     private void testGOSTStore()
@@ -555,6 +609,29 @@ public class PKCS12StoreTest
         if (!sig.verify(signature))
         {
             fail("key test failed in GOST store");
+        }
+
+        KeyStore ks = KeyStore.getInstance("PKCS12", "BC");
+
+        ks.load(new ByteArrayInputStream(gostOpenSSLIntegerDPfx), "password".toCharArray());
+
+        PrivateKey key = (PrivateKey)ks.getKey("test", "password".toCharArray());
+
+        X509Certificate cert = (X509Certificate)ks.getCertificate("test");
+
+        sig.initSign(key);
+
+        sig.update(data);
+
+        signature = sig.sign();
+
+        sig.initVerify(cert.getPublicKey());
+
+        sig.update(data);
+
+        if (!sig.verify(signature))
+        {
+            fail("key test failed in 2nd GOST store");
         }
     }
 
@@ -1175,6 +1252,124 @@ public class PKCS12StoreTest
         }
     }
 
+    private void testChainCycle()
+        throws Exception
+    {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
+
+        // initialize key store
+        keyStore.load(new ByteArrayInputStream(certChainCycle), "test".toCharArray());
+
+        keyStore.getEntry("cycle", new KeyStore.PasswordProtection("test".toCharArray()));
+    }
+
+    private void testOrphanedCertCleanup()
+        throws Exception
+    {
+        KeyPair kp1 = TestUtils.generateRSAKeyPair();
+        KeyPair kp1ca = TestUtils.generateRSAKeyPair();
+        KeyPair kp1ee = TestUtils.generateRSAKeyPair();
+
+        X509Certificate kp1Root = TestUtils.generateRootCert(kp1, new X500Name("CN=KP1 ROOT"));
+        X509Certificate kp1CA = TestUtils.generateIntermediateCert(kp1ca.getPublic(), new X500Name("CN=KP1 CA"), kp1.getPrivate(), kp1Root);
+        X509Certificate kp1EE = TestUtils.generateEndEntityCert(kp1ee.getPublic(), new X500Name("CN=KP1 EE"), kp1ca.getPrivate(), kp1CA);
+
+        Certificate[] kp1Chain = new Certificate[] { kp1EE, kp1CA, kp1Root };
+
+        KeyPair kp2 = TestUtils.generateRSAKeyPair();
+        KeyPair kp2ca = TestUtils.generateRSAKeyPair();
+        KeyPair kp2ee = TestUtils.generateRSAKeyPair();
+
+        X509Certificate kp2Root = TestUtils.generateRootCert(kp2, new X500Name("CN=KP2 ROOT"));
+        X509Certificate kp2CA = TestUtils.generateIntermediateCert(kp2ca.getPublic(), new X500Name("CN=KP2 CA"), kp2.getPrivate(), kp1Root);
+        X509Certificate kp2EE = TestUtils.generateEndEntityCert(kp2ee.getPublic(), new X500Name("CN=KP2 EE"), kp2ca.getPrivate(), kp1CA);
+
+        Certificate[] kp2Chain = new Certificate[] { kp2EE, kp2CA, kp2Root };
+
+        KeyPair kp3 = TestUtils.generateRSAKeyPair();
+        X509Certificate kp3Root = TestUtils.generateRootCert(kp3, new X500Name("CN=KP3 ROOT"));
+
+        KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
+
+        keyStore.load(null, null);
+
+        keyStore.setKeyEntry("kp1", kp1ee.getPrivate(), null, kp1Chain);
+        keyStore.setCertificateEntry("kp1root", kp1Root);
+        keyStore.setKeyEntry("kp2", kp1ee.getPrivate(), null, kp2Chain);
+
+        keyStore.setCertificateEntry("kp3root", kp3Root);
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+
+        keyStore.store(bOut, "fred".toCharArray());
+
+        byte[] baseData = bOut.toByteArray();
+
+        KeyStore ks1 = KeyStore.getInstance("PKCS12", "BC");
+
+        ks1.load(new ByteArrayInputStream(baseData), "fred".toCharArray());
+
+        if (!ks1.containsAlias("kp1") || !ks1.isKeyEntry("kp1") || ks1.getCertificateChain("kp1").length != 3)
+        {
+            fail("kp1 missing in ks1");
+        }
+
+        ks1.deleteEntry("kp1");
+
+        ByteArrayOutputStream bOut1 = new ByteArrayOutputStream();
+
+        ks1.store(bOut1, "fred".toCharArray());
+
+        KeyStore ks2 = KeyStore.getInstance("PKCS12", "BC");
+
+        ks2.load(new ByteArrayInputStream(bOut1.toByteArray()), "fred".toCharArray());
+
+        if (!ks2.containsAlias("kp2") || !ks2.isKeyEntry("kp2") || ks2.getCertificateChain("kp2").length != 3)
+        {
+            fail("kp2 missing in ks2");
+        }
+
+        if (!ks2.containsAlias("kp1root") || !ks2.isCertificateEntry("kp1root"))
+        {
+            fail("kp1root missing in ks2");
+        }
+
+        if (!ks2.containsAlias("kp3root") || !ks2.isCertificateEntry("kp3root"))
+        {
+            fail("kp3root missing in ks2");
+        }
+
+        if (ks2.size() != 3)
+        {
+            fail("ks2 wrong size");
+        }
+
+        ks2.deleteEntry("kp2");
+
+        ByteArrayOutputStream bOut2 = new ByteArrayOutputStream();
+
+        ks2.store(bOut2, "fred".toCharArray());
+
+        KeyStore ks3 = KeyStore.getInstance("PKCS12", "BC");
+
+        ks3.load(new ByteArrayInputStream(bOut2.toByteArray()), "fred".toCharArray());
+
+        if (!ks3.containsAlias("kp1root") || !ks3.isCertificateEntry("kp1root"))
+        {
+            fail("kp1root missing in ks3");
+        }
+
+        if (!ks3.containsAlias("kp3root") || !ks3.isCertificateEntry("kp3root"))
+        {
+            fail("kp3root missing in ks3");
+        }
+
+        if (ks3.size() != 2)
+        {
+            fail("ks3 wrong size");
+        }
+    }
+
     public String getName()
     {
         return "PKCS12Store";
@@ -1185,6 +1380,7 @@ public class PKCS12StoreTest
     {
         testPKCS12Store();
         testGOSTStore();
+        testChainCycle();
 
         // converter tests
 
@@ -1215,6 +1411,8 @@ public class PKCS12StoreTest
         {
             fail("Failed deep DER conversion test - inner.");
         }
+
+        testOrphanedCertCleanup();
     }
 
     public static void main(

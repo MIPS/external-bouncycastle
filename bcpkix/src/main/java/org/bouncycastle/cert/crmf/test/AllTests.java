@@ -15,6 +15,7 @@ import java.util.Date;
 
 import javax.security.auth.x500.X500Principal;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -22,10 +23,14 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.crmf.CRMFObjectIdentifiers;
 import org.bouncycastle.asn1.crmf.EncKeyWithID;
 import org.bouncycastle.asn1.crmf.EncryptedValue;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.asn1.ntt.NTTObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v1CertificateBuilder;
+import org.bouncycastle.cert.crmf.CRMFException;
 import org.bouncycastle.cert.crmf.EncryptedValueBuilder;
 import org.bouncycastle.cert.crmf.EncryptedValuePadder;
 import org.bouncycastle.cert.crmf.EncryptedValueParser;
@@ -44,6 +49,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v1CertificateBuilder;
 import org.bouncycastle.cms.CMSAlgorithm;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.RecipientId;
 import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.RecipientInformationStore;
@@ -53,6 +59,7 @@ import org.bouncycastle.cms.jcajce.JceKeyTransRecipientId;
 import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JceAsymmetricKeyWrapper;
@@ -112,19 +119,26 @@ public class AllTests
                     .setPublicKey(kp.getPublic());
 
         certReqBuild.addControl(new JcaPKIArchiveControlBuilder(kp.getPrivate(), new X500Principal("CN=Test"))
-                                      .addRecipientGenerator(new JceKeyTransRecipientInfoGenerator(cert).setProvider(BC))
-                                      .build(new JceCMSContentEncryptorBuilder(new ASN1ObjectIdentifier(CMSEnvelopedDataGenerator.AES128_CBC)).setProvider(BC).build()));
+            .addRecipientGenerator(new JceKeyTransRecipientInfoGenerator(cert).setProvider(BC))
+            .build(new JceCMSContentEncryptorBuilder(new ASN1ObjectIdentifier(CMSEnvelopedDataGenerator.AES128_CBC)).setProvider(BC).build()));
 
-        JcaCertificateRequestMessage certReqMsg = new JcaCertificateRequestMessage(certReqBuild.build());
+        JcaCertificateRequestMessage certReqMsg = new JcaCertificateRequestMessage(certReqBuild.build()).setProvider(BC);
 
-        assertEquals(new X500Principal("CN=Test"), certReqMsg.getSubjectX500Principal());
-        assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
+        TestCase.assertEquals(new X500Principal("CN=Test"), certReqMsg.getSubjectX500Principal());
+        TestCase.assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
 
+        checkCertReqMsgWithArchiveControl(kp, cert, certReqMsg);
+        checkCertReqMsgWithArchiveControl(kp, cert, new JcaCertificateRequestMessage(certReqMsg.getEncoded()));
+    }
+
+    private void checkCertReqMsgWithArchiveControl(KeyPair kp, X509Certificate cert, JcaCertificateRequestMessage certReqMsg)
+        throws CRMFException, CMSException, IOException
+    {
         PKIArchiveControl archiveControl = (PKIArchiveControl)certReqMsg.getControl(CRMFObjectIdentifiers.id_regCtrl_pkiArchiveOptions);
 
-        assertEquals(PKIArchiveControl.encryptedPrivKey, archiveControl.getArchiveType());
+        TestCase.assertEquals(PKIArchiveControl.encryptedPrivKey, archiveControl.getArchiveType());
 
-        assertTrue(archiveControl.isEnvelopedData());
+        TestCase.assertTrue(archiveControl.isEnvelopedData());
 
         RecipientInformationStore recips = archiveControl.getEnvelopedData().getRecipientInfos();
 
@@ -132,15 +146,15 @@ public class AllTests
 
         RecipientInformation recipientInformation = recips.get(recipientId);
 
-        assertNotNull(recipientInformation);
+        TestCase.assertNotNull(recipientInformation);
 
         EncKeyWithID encKeyWithID = EncKeyWithID.getInstance(recipientInformation.getContent(new JceKeyTransEnvelopedRecipient(kp.getPrivate()).setProvider(BC)));
 
-        assertTrue(encKeyWithID.hasIdentifier());
-        assertFalse(encKeyWithID.isIdentifierUTF8String());
+        TestCase.assertTrue(encKeyWithID.hasIdentifier());
+        TestCase.assertFalse(encKeyWithID.isIdentifierUTF8String());
 
-        assertEquals(new GeneralName(X500Name.getInstance(new X500Principal("CN=Test").getEncoded())), encKeyWithID.getIdentifier());
-        assertTrue(Arrays.areEqual(kp.getPrivate().getEncoded(), encKeyWithID.getPrivateKey().getEncoded()));
+        TestCase.assertEquals(new GeneralName(X500Name.getInstance(new X500Principal("CN=Test").getEncoded())), encKeyWithID.getIdentifier());
+        TestCase.assertTrue(Arrays.areEqual(kp.getPrivate().getEncoded(), encKeyWithID.getPrivateKey().getEncoded()));
     }
 
     public void testProofOfPossessionWithoutSender()
@@ -160,25 +174,42 @@ public class AllTests
                     .setProofOfPossessionSigningKeySigner(new JcaContentSignerBuilder("SHA1withRSA").setProvider(BC).build(kp.getPrivate()));
 
         certReqBuild.addControl(new JcaPKIArchiveControlBuilder(kp.getPrivate(), new X500Principal("CN=test"))
-                                      .addRecipientGenerator(new JceKeyTransRecipientInfoGenerator(cert).setProvider(BC))
-                                      .build(new JceCMSContentEncryptorBuilder(new ASN1ObjectIdentifier(CMSEnvelopedDataGenerator.AES128_CBC)).setProvider(BC).build()));
+            .addRecipientGenerator(new JceKeyTransRecipientInfoGenerator(cert).setProvider(BC))
+            .build(new JceCMSContentEncryptorBuilder(new ASN1ObjectIdentifier(CMSEnvelopedDataGenerator.AES128_CBC)).setProvider(BC).build()));
 
-        JcaCertificateRequestMessage certReqMsg = new JcaCertificateRequestMessage(certReqBuild.build().getEncoded());
+        JcaCertificateRequestMessage certReqMsg = new JcaCertificateRequestMessage(certReqBuild.build().getEncoded()).setProvider(BC);
 
         // check that internal check on popo signing is working okay
         try
         {
             certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic()));
-            fail("IllegalStateException not thrown");
+            TestCase.fail("IllegalStateException not thrown");
         }
         catch (IllegalStateException e)
         {
             // ignore
         }
 
-        assertTrue(certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic()), new PKMACBuilder(new JcePKMACValuesCalculator().setProvider(BC)), "fred".toCharArray()));
+        TestCase.assertTrue(certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic()), new PKMACBuilder(new JcePKMACValuesCalculator().setProvider(BC)), "fred".toCharArray()));
 
-        assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
+        TestCase.assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
+
+        certReqMsg = new JcaCertificateRequestMessage(certReqBuild.build()).setProvider(BC);
+
+                // check that internal check on popo signing is working okay
+        try
+        {
+            certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic()));
+            TestCase.fail("IllegalStateException not thrown");
+        }
+        catch (IllegalStateException e)
+        {
+            // ignore
+        }
+
+        TestCase.assertTrue(certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic()), new PKMACBuilder(new JcePKMACValuesCalculator().setProvider(BC)), "fred".toCharArray()));
+
+        TestCase.assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
     }
 
     public void testProofOfPossessionWithSender()
@@ -247,6 +278,30 @@ public class AllTests
         assertTrue(certReqMsg.isValidSigningKeyPOP(new JcaContentVerifierProviderBuilder().setProvider(BC).build(kp.getPublic())));
 
         assertEquals(kp.getPublic(), certReqMsg.getPublicKey());
+    }
+
+    public void testKeySizes()
+        throws Exception
+    {
+        verifyKeySize(NISTObjectIdentifiers.id_aes128_CBC, 128);
+        verifyKeySize(NISTObjectIdentifiers.id_aes192_CBC, 192);
+        verifyKeySize(NISTObjectIdentifiers.id_aes256_CBC, 256);
+
+        verifyKeySize(NTTObjectIdentifiers.id_camellia128_cbc, 128);
+        verifyKeySize(NTTObjectIdentifiers.id_camellia192_cbc, 192);
+        verifyKeySize(NTTObjectIdentifiers.id_camellia256_cbc, 256);
+
+        verifyKeySize(PKCSObjectIdentifiers.des_EDE3_CBC, 192);
+    }
+
+    private void verifyKeySize(ASN1ObjectIdentifier oid, int keySize)
+        throws Exception
+    {
+        JceCRMFEncryptorBuilder encryptorBuilder = new JceCRMFEncryptorBuilder(oid).setProvider(BC);
+
+        OutputEncryptor outputEncryptor = encryptorBuilder.build();
+
+        Assert.assertEquals(keySize / 8, ((byte[])(outputEncryptor.getKey().getRepresentation())).length);
     }
 
     public void testEncryptedValue()

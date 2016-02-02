@@ -11,8 +11,15 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
- * ANS.1 def for Diffie-Hellman key exchange OtherInfo structure. See
+ * ASN.1 def for Diffie-Hellman key exchange OtherInfo structure. See
  * RFC 2631, or X9.42, for further details.
+ * <pre>
+ *  OtherInfo ::= SEQUENCE {
+ *      keyInfo KeySpecificInfo,
+ *      partyAInfo [0] OCTET STRING OPTIONAL,
+ *      suppPubInfo [2] OCTET STRING
+ *  }
+ * </pre>
  */
 public class OtherInfo
     extends ASN1Object
@@ -31,12 +38,32 @@ public class OtherInfo
         this.suppPubInfo = suppPubInfo;
     }
 
-    public OtherInfo(
+    /**
+     * Return a OtherInfo object from the passed in object.
+     *
+     * @param obj an object for conversion or a byte[].
+     * @return a OtherInfo
+     */
+    public static OtherInfo getInstance(Object obj)
+    {
+        if (obj instanceof OtherInfo)
+        {
+            return (OtherInfo)obj;
+        }
+        else if (obj != null)
+        {
+            return new OtherInfo(ASN1Sequence.getInstance(obj));
+        }
+
+        return null;
+    }
+
+    private OtherInfo(
         ASN1Sequence  seq)
     {
         Enumeration e = seq.getObjects();
 
-        keyInfo = new KeySpecificInfo((ASN1Sequence)e.nextElement());
+        keyInfo = KeySpecificInfo.getInstance(e.nextElement());
 
         while (e.hasMoreElements())
         {
@@ -53,30 +80,40 @@ public class OtherInfo
         }
     }
 
+    /**
+     * Return the key specific info for the KEK/CEK.
+     *
+     * @return the key specific info.
+     */
     public KeySpecificInfo getKeyInfo()
     {
         return keyInfo;
     }
 
+    /**
+     * PartyA info for key deriviation.
+     *
+     * @return PartyA info.
+     */
     public ASN1OctetString getPartyAInfo()
     {
         return partyAInfo;
     }
 
+    /**
+     * The length of the KEK to be generated as a 4 byte big endian.
+     *
+     * @return KEK length as a 4 byte big endian in an octet string.
+     */
     public ASN1OctetString getSuppPubInfo()
     {
         return suppPubInfo;
     }
 
     /**
-     * Produce an object suitable for an ASN1OutputStream.
-     * <pre>
-     *  OtherInfo ::= SEQUENCE {
-     *      keyInfo KeySpecificInfo,
-     *      partyAInfo [0] OCTET STRING OPTIONAL,
-     *      suppPubInfo [2] OCTET STRING
-     *  }
-     * </pre>
+     * Return an ASN.1 primitive representation of this object.
+     *
+     * @return a DERSequence containing the OtherInfo values.
      */
     public ASN1Primitive toASN1Primitive()
     {

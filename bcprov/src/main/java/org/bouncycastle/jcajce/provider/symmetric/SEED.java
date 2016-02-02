@@ -13,6 +13,7 @@ import org.bouncycastle.crypto.CipherKeyGenerator;
 import org.bouncycastle.crypto.engines.SEEDEngine;
 import org.bouncycastle.crypto.engines.SEEDWrapEngine;
 import org.bouncycastle.crypto.generators.Poly1305KeyGenerator;
+import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.macs.GMac;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
@@ -70,6 +71,15 @@ public final class SEED
         public KeyGen()
         {
             super("SEED", 128, new CipherKeyGenerator());
+        }
+    }
+
+    public static class CMAC
+        extends BaseMac
+    {
+        public CMAC()
+        {
+            super(new CMac(new SEEDEngine()));
         }
     }
 
@@ -166,15 +176,17 @@ public final class SEED
             provider.addAlgorithm("Alg.Alias.AlgorithmParameterGenerator." + KISAObjectIdentifiers.id_seedCBC, "SEED");
 
             provider.addAlgorithm("Cipher.SEED", PREFIX + "$ECB");
-            provider.addAlgorithm("Cipher." + KISAObjectIdentifiers.id_seedCBC, PREFIX + "$CBC");
+            provider.addAlgorithm("Cipher", KISAObjectIdentifiers.id_seedCBC, PREFIX + "$CBC");
 
             provider.addAlgorithm("Cipher.SEEDWRAP", PREFIX + "$Wrap");
-            provider.addAlgorithm("Alg.Alias.Cipher." + KISAObjectIdentifiers.id_npki_app_cmsSeed_wrap, "SEEDWRAP");
+            provider.addAlgorithm("Alg.Alias.Cipher", KISAObjectIdentifiers.id_npki_app_cmsSeed_wrap, "SEEDWRAP");
+            provider.addAlgorithm("Alg.Alias.Cipher.SEEDKW", "SEEDWRAP");
 
             provider.addAlgorithm("KeyGenerator.SEED", PREFIX + "$KeyGen");
-            provider.addAlgorithm("KeyGenerator." + KISAObjectIdentifiers.id_seedCBC, PREFIX + "$KeyGen");
-            provider.addAlgorithm("KeyGenerator." + KISAObjectIdentifiers.id_npki_app_cmsSeed_wrap, PREFIX + "$KeyGen");
+            provider.addAlgorithm("KeyGenerator", KISAObjectIdentifiers.id_seedCBC, PREFIX + "$KeyGen");
+            provider.addAlgorithm("KeyGenerator", KISAObjectIdentifiers.id_npki_app_cmsSeed_wrap, PREFIX + "$KeyGen");
 
+            addCMacAlgorithm(provider, "SEED", PREFIX + "$CMAC", PREFIX + "$KeyGen");
             addGMacAlgorithm(provider, "SEED", PREFIX + "$GMAC", PREFIX + "$KeyGen");
             addPoly1305Algorithm(provider, "SEED", PREFIX + "$Poly1305", PREFIX + "$Poly1305KeyGen");
         }

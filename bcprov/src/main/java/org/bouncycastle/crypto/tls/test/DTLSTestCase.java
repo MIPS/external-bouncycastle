@@ -2,14 +2,12 @@ package org.bouncycastle.crypto.tls.test;
 
 import java.security.SecureRandom;
 
-import junit.framework.TestCase;
-
-import org.bouncycastle.crypto.tls.DTLSClientProtocol;
-import org.bouncycastle.crypto.tls.DTLSServerProtocol;
 import org.bouncycastle.crypto.tls.DTLSTransport;
 import org.bouncycastle.crypto.tls.DatagramTransport;
 import org.bouncycastle.crypto.tls.ProtocolVersion;
 import org.bouncycastle.util.Arrays;
+
+import junit.framework.TestCase;
 
 public class DTLSTestCase extends TestCase
 {
@@ -23,24 +21,42 @@ public class DTLSTestCase extends TestCase
 
     protected final TlsTestConfig config;
 
+    public DTLSTestCase(String name)
+    {
+        super(name);
+
+        this.config = null;
+    }
+
     public DTLSTestCase(TlsTestConfig config, String name)
     {
+        super(name);
+
         checkDTLSVersion(config.clientMinimumVersion);
         checkDTLSVersion(config.clientOfferVersion);
         checkDTLSVersion(config.serverMaximumVersion);
         checkDTLSVersion(config.serverMinimumVersion);
 
         this.config = config;
+    }
 
-        setName(name);
+    public void testDummy()
+    {
+        // Avoid "No tests found" warning from junit
     }
 
     protected void runTest() throws Throwable
     {
+        // Disable the test if it is not being run via DTLSTestSuite
+        if (config == null)
+        {
+            return;
+        }
+
         SecureRandom secureRandom = new SecureRandom();
 
-        DTLSClientProtocol clientProtocol = new DTLSClientProtocol(secureRandom);
-        DTLSServerProtocol serverProtocol = new DTLSServerProtocol(secureRandom);
+        DTLSTestClientProtocol clientProtocol = new DTLSTestClientProtocol(secureRandom, config);
+        DTLSTestServerProtocol serverProtocol = new DTLSTestServerProtocol(secureRandom, config);
 
         MockDatagramAssociation network = new MockDatagramAssociation(1500);
 
@@ -99,7 +115,7 @@ public class DTLSTestCase extends TestCase
         }
     }
 
-    protected  void logException(Exception e)
+    protected void logException(Exception e)
     {
         if (TlsTestConfig.DEBUG)
         {
@@ -110,14 +126,14 @@ public class DTLSTestCase extends TestCase
     class ServerThread
         extends Thread
     {
-        private final DTLSServerProtocol serverProtocol;
+        private final DTLSTestServerProtocol serverProtocol;
         private final DatagramTransport serverTransport;
         private final TlsTestServerImpl serverImpl;
 
         private volatile boolean isShutdown = false;
         Exception caught = null;
 
-        ServerThread(DTLSServerProtocol serverProtocol, DatagramTransport serverTransport, TlsTestServerImpl serverImpl)
+        ServerThread(DTLSTestServerProtocol serverProtocol, DatagramTransport serverTransport, TlsTestServerImpl serverImpl)
         {
             this.serverProtocol = serverProtocol;
             this.serverTransport = serverTransport;

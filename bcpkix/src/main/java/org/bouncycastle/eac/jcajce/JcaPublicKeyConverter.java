@@ -8,7 +8,10 @@ import java.security.Provider;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECField;
+import java.security.spec.ECFieldF2m;
 import java.security.spec.ECFieldFp;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPublicKeySpec;
 import java.security.spec.EllipticCurve;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
@@ -19,10 +22,13 @@ import org.bouncycastle.asn1.eac.ECDSAPublicKey;
 import org.bouncycastle.asn1.eac.PublicKeyDataObject;
 import org.bouncycastle.asn1.eac.RSAPublicKey;
 import org.bouncycastle.eac.EACException;
-import org.bouncycastle.jce.spec.ECParameterSpec;
-import org.bouncycastle.jce.spec.ECPublicKeySpec;
+import org.bouncycastle.math.ec.ECAlgorithms;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.math.field.FiniteField;
+import org.bouncycastle.math.field.Polynomial;
+import org.bouncycastle.math.field.PolynomialExtensionField;
+import org.bouncycastle.util.Arrays;
 
 public class JcaPublicKeyConverter
 {
@@ -75,10 +81,8 @@ public class JcaPublicKeyConverter
         throws EACException, InvalidKeySpecException
     {
         ECParameterSpec spec = getParams(key);
-        ECCurve curve = spec.getCurve();
-
-        ECPoint point = curve.decodePoint(key.getPublicPointY());
-        ECPublicKeySpec pubKeySpec = new ECPublicKeySpec(point, spec);
+        java.security.spec.ECPoint publicPoint = getPublicPoint(key);
+        ECPublicKeySpec pubKeySpec = new ECPublicKeySpec(publicPoint, spec);
 
         KeyFactory factk;
         try
@@ -97,6 +101,21 @@ public class JcaPublicKeyConverter
         return factk.generatePublic(pubKeySpec);
     }
 
+    private java.security.spec.ECPoint getPublicPoint(ECDSAPublicKey key)
+    {
+        if (!key.hasParameters())
+        {
+            throw new IllegalArgumentException("Public key does not contains EC Params");
+        }
+
+        BigInteger p = key.getPrimeModulusP();
+        ECCurve.Fp curve = new ECCurve.Fp(p, key.getFirstCoefA(), key.getSecondCoefB(), key.getOrderOfBasePointR(), key.getCofactorF());
+
+        ECPoint.Fp pubY = (ECPoint.Fp)curve.decodePoint(key.getPublicPointY());
+
+        return new java.security.spec.ECPoint(pubY.getAffineXCoord().toBigInteger(), pubY.getAffineYCoord().toBigInteger());
+    }
+
     private ECParameterSpec getParams(ECDSAPublicKey key)
     {
         if (!key.hasParameters())
@@ -105,16 +124,16 @@ public class JcaPublicKeyConverter
         }
 
         BigInteger p = key.getPrimeModulusP();
-        ECCurve.Fp curve = new ECCurve.Fp(p, key.getFirstCoefA(), key.getSecondCoefB());
+        ECCurve.Fp curve = new ECCurve.Fp(p, key.getFirstCoefA(), key.getSecondCoefB(), key.getOrderOfBasePointR(), key.getCofactorF());
 
         ECPoint G = curve.decodePoint(key.getBasePointG());
 
         BigInteger order = key.getOrderOfBasePointR();
         BigInteger coFactor = key.getCofactorF();
-                   // TODO: update to use JDK 1.5 EC API
-        ECParameterSpec ecspec = new ECParameterSpec(curve, G, order, coFactor);
 
-        return ecspec;
+        EllipticCurve jcaCurve = convertCurve(curve);
+
+        return new ECParameterSpec(jcaCurve, new java.security.spec.ECPoint(G.getAffineXCoord().toBigInteger(), G.getAffineYCoord().toBigInteger()), order, coFactor.intValue());
     }
 
     public PublicKeyDataObject getPublicKeyDataObject(ASN1ObjectIdentifier usage, PublicKey publicKey)
@@ -134,23 +153,22 @@ public class JcaPublicKeyConverter
                 usage,
                 ((ECFieldFp)params.getCurve().getField()).getP(),
                 params.getCurve().getA(), params.getCurve().getB(),
-                convertPoint(convertCurve(params.getCurve()), params.getGenerator(), false).getEncoded(),
+                convertPoint(convertCurve(params.getCurve(), params.getOrder(), params.getCofactor()), params.getGenerator()).getEncoded(),
                 params.getOrder(),
-                convertPoint(convertCurve(params.getCurve()), pubKey.getW(), false).getEncoded(),
+                convertPoint(convertCurve(params.getCurve(), params.getOrder(), params.getCofactor()), pubKey.getW()).getEncoded(),
                 params.getCofactor());
         }
     }
 
     private static org.bouncycastle.math.ec.ECPoint convertPoint(
         ECCurve curve,
-        java.security.spec.ECPoint point,
-        boolean withCompression)
+        java.security.spec.ECPoint point)
     {
-        return curve.createPoint(point.getAffineX(), point.getAffineY(), withCompression);
+        return curve.createPoint(point.getAffineX(), point.getAffineY());
     }
 
     private static ECCurve convertCurve(
-        EllipticCurve ec)
+        EllipticCurve ec, BigInteger order, int coFactor)
     {
         ECField field = ec.getField();
         BigInteger a = ec.getA();
@@ -158,11 +176,37 @@ public class JcaPublicKeyConverter
 
         if (field instanceof ECFieldFp)
         {
-            return new ECCurve.Fp(((ECFieldFp)field).getP(), a, b);
+            return new ECCurve.Fp(((ECFieldFp)field).getP(), a, b, order, BigInteger.valueOf(coFactor));
         }
         else
         {
             throw new IllegalStateException("not implemented yet!!!");
+        }
+    }
+
+    private static EllipticCurve convertCurve(
+        ECCurve curve)
+    {
+        ECField field = convertField(curve.getField());
+        BigInteger a = curve.getA().toBigInteger(), b = curve.getB().toBigInteger();
+
+        // TODO: the Sun EC implementation doesn't currently handle the seed properly
+        // so at the moment it's set to null. Should probably look at making this configurable
+        return new EllipticCurve(field, a, b, null);
+    }
+
+    private static ECField convertField(FiniteField field)
+    {
+        if (ECAlgorithms.isFpField(field))
+        {
+            return new ECFieldFp(field.getCharacteristic());
+        }
+        else //if (ECAlgorithms.isF2mField(curveField))
+        {
+            Polynomial poly = ((PolynomialExtensionField)field).getMinimalPolynomial();
+            int[] exponents = poly.getExponentsPresent();
+            int[] ks = Arrays.reverse(Arrays.copyOfRange(exponents, 1, exponents.length - 1));
+            return new ECFieldF2m(poly.getDegree(), ks);
         }
     }
 }

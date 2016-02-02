@@ -147,7 +147,13 @@ public abstract class AbstractTlsServer
         if (clientExtensions != null)
         {
             this.encryptThenMACOffered = TlsExtensionsUtils.hasEncryptThenMACExtension(clientExtensions);
+
             this.maxFragmentLengthOffered = TlsExtensionsUtils.getMaxFragmentLengthExtension(clientExtensions);
+            if (maxFragmentLengthOffered >= 0 && !MaxFragmentLength.isValid(maxFragmentLengthOffered))
+            {
+                throw new TlsFatalAlert(AlertDescription.illegal_parameter);
+            }
+
             this.truncatedHMacOffered = TlsExtensionsUtils.hasTruncatedHMacExtension(clientExtensions);
 
             this.supportedSignatureAlgorithms = TlsUtils.getSignatureAlgorithmsExtension(clientExtensions);
@@ -170,11 +176,15 @@ public abstract class AbstractTlsServer
         /*
          * RFC 4429 4. The client MUST NOT include these extensions in the ClientHello message if it
          * does not propose any ECC cipher suites.
+         * 
+         * NOTE: This was overly strict as there may be ECC cipher suites that we don't recognize.
+         * Also, draft-ietf-tls-negotiated-ff-dhe will be overloading the 'elliptic_curves'
+         * extension to explicitly allow FFDHE (i.e. non-ECC) groups.
          */
-        if (!this.eccCipherSuitesOffered && (this.namedCurves != null || this.clientECPointFormats != null))
-        {
-            throw new TlsFatalAlert(AlertDescription.illegal_parameter);
-        }
+//        if (!this.eccCipherSuitesOffered && (this.namedCurves != null || this.clientECPointFormats != null))
+//        {
+//            throw new TlsFatalAlert(AlertDescription.illegal_parameter);
+//        }
     }
 
     public ProtocolVersion getServerVersion()
@@ -335,6 +345,15 @@ public abstract class AbstractTlsServer
              */
             throw new TlsFatalAlert(AlertDescription.internal_error);
         }
+    }
+
+    public TlsCipher getCipher()
+        throws IOException
+    {
+        int encryptionAlgorithm = TlsUtils.getEncryptionAlgorithm(selectedCipherSuite);
+        int macAlgorithm = TlsUtils.getMACAlgorithm(selectedCipherSuite);
+
+        return cipherFactory.createCipher(context, encryptionAlgorithm, macAlgorithm);
     }
 
     public NewSessionTicket getNewSessionTicket()

@@ -2,10 +2,10 @@ package org.bouncycastle.tsp.test;
 
 import java.security.Security;
 
+import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class AllTests
     extends TestCase
@@ -17,8 +17,6 @@ public class AllTests
     
     public static Test suite()
     {
-        Security.addProvider(new BouncyCastleProvider());
-        
         TestSuite suite = new TestSuite("TSP Tests");
         
         suite.addTestSuite(ParseTest.class);
@@ -26,7 +24,28 @@ public class AllTests
         suite.addTestSuite(CMSTimeStampedDataTest.class);
         suite.addTestSuite(CMSTimeStampedDataParserTest.class);
         suite.addTestSuite(CMSTimeStampedDataGeneratorTest.class);
-        
-        return suite;
+        suite.addTestSuite(GenTimeAccuracyUnitTest.class);
+        suite.addTestSuite(TimeStampTokenInfoUnitTest.class);
+
+        return new BCTestSetup(suite);
+    }
+
+    static class BCTestSetup
+        extends TestSetup
+    {
+        public BCTestSetup(Test test)
+        {
+            super(test);
+        }
+
+        protected void setUp()
+        {
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        }
+
+        protected void tearDown()
+        {
+            Security.removeProvider("BC");
+        }
     }
 }

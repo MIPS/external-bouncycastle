@@ -1,20 +1,15 @@
 package org.bouncycastle.crypto.signers;
 
 import java.math.BigInteger;
-import java.util.Hashtable;
 
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.Signer;
-import org.bouncycastle.crypto.SignerWithRecovery;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.BigIntegers;
-import org.bouncycastle.util.Integers;
-import org.bouncycastle.util.encoders.Hex;
 
 /**
  * X9.31-1998 - signing using a hash.
@@ -28,31 +23,24 @@ import org.bouncycastle.util.encoders.Hex;
 public class X931Signer
     implements Signer
 {
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_IMPLICIT    = 0xBC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_RIPEMD160   = 0x31CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_RIPEMD128   = 0x32CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA1        = 0x33CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA256      = 0x34CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA512      = 0x35CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA384      = 0x36CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_WHIRLPOOL   = 0x37CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA224      = 0x38CC;
-
-    private static Hashtable  trailerMap          = new Hashtable();
-
-    static
-    {
-        trailerMap.put("RIPEMD128", Integers.valueOf(TRAILER_RIPEMD128));
-        trailerMap.put("RIPEMD160", Integers.valueOf(TRAILER_RIPEMD160));
-
-        trailerMap.put("SHA-1", Integers.valueOf(TRAILER_SHA1));
-        trailerMap.put("SHA-224", Integers.valueOf(TRAILER_SHA224));
-        trailerMap.put("SHA-256", Integers.valueOf(TRAILER_SHA256));
-        trailerMap.put("SHA-384", Integers.valueOf(TRAILER_SHA384));
-        trailerMap.put("SHA-512", Integers.valueOf(TRAILER_SHA512));
-
-        trailerMap.put("Whirlpool", Integers.valueOf(TRAILER_WHIRLPOOL));
-    }
 
     private Digest                      digest;
     private AsymmetricBlockCipher       cipher;
@@ -63,8 +51,7 @@ public class X931Signer
     private byte[]      block;
 
     /**
-     * Generate a signer for the with either implicit or explicit trailers
-     * for ISO9796-2.
+     * Generate a signer with either implicit or explicit trailers for X9.31
      *
      * @param cipher base cipher to use for signature creation/verification
      * @param digest digest to use.
@@ -80,11 +67,11 @@ public class X931Signer
 
         if (implicit)
         {
-            trailer = TRAILER_IMPLICIT;
+            trailer = ISOTrailers.TRAILER_IMPLICIT;
         }
         else
         {
-            Integer trailerObj = (Integer)trailerMap.get(digest.getAlgorithmName());
+            Integer trailerObj = ISOTrailers.getTrailer(digest);
 
             if (trailerObj != null)
             {
@@ -92,7 +79,7 @@ public class X931Signer
             }
             else
             {
-                throw new IllegalArgumentException("no valid trailer for digest");
+                throw new IllegalArgumentException("no valid trailer for digest: " + digest.getAlgorithmName());
             }
         }
     }
@@ -175,20 +162,11 @@ public class X931Signer
         createSignatureBlock();
 
         BigInteger t = new BigInteger(1, cipher.processBlock(block, 0, block.length));
-        BigInteger nSubT = kParam.getModulus().subtract(t);
-
         clearBlock(block);
 
-        BigInteger v = kParam.getModulus().shiftRight(2);
+        t = t.min(kParam.getModulus().subtract(t));
 
-        if (t.compareTo(nSubT) > 0)
-        {
-            return BigIntegers.asUnsignedByteArray((kParam.getModulus().bitLength() + 7) / 8, nSubT);
-        }
-        else
-        {
-            return BigIntegers.asUnsignedByteArray((kParam.getModulus().bitLength() + 7) / 8, t);
-        }
+        return BigIntegers.asUnsignedByteArray((kParam.getModulus().bitLength() + 7) / 8, t);
     }
 
     private void createSignatureBlock()
@@ -197,11 +175,11 @@ public class X931Signer
 
         int delta;
 
-        if (trailer == TRAILER_IMPLICIT)
+        if (trailer == ISOTrailers.TRAILER_IMPLICIT)
         {
             delta = block.length - digSize - 1;
             digest.doFinal(block, delta);
-            block[block.length - 1] = (byte)TRAILER_IMPLICIT;
+            block[block.length - 1] = (byte)ISOTrailers.TRAILER_IMPLICIT;
         }
         else
         {
@@ -235,17 +213,17 @@ public class X931Signer
             return false;
         }
 
-        BigInteger t = new BigInteger(block);
+        BigInteger t = new BigInteger(1, block);
         BigInteger f;
 
-        if (t.mod(BigInteger.valueOf(16)).equals(BigInteger.valueOf(12)))
+        if ((t.intValue() & 15) == 12)
         {
              f = t;
         }
         else
         {
             t = kParam.getModulus().subtract(t);
-            if (t.mod(BigInteger.valueOf(16)).equals(BigInteger.valueOf(12)))
+            if ((t.intValue() & 15) == 12)
             {
                  f = t;
             }

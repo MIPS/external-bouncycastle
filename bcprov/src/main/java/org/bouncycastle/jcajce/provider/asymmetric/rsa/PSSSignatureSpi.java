@@ -2,8 +2,8 @@ package org.bouncycastle.jcajce.provider.asymmetric.rsa;
 
 import java.io.ByteArrayOutputStream;
 import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.InvalidParameterException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -24,7 +24,6 @@ import org.bouncycastle.crypto.params.ParametersWithRandom;
 import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.bouncycastle.jcajce.util.BCJcaJceHelper;
 import org.bouncycastle.jcajce.util.JcaJceHelper;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class PSSSignatureSpi
     extends SignatureSpi
@@ -179,7 +178,7 @@ public class PSSSignatureSpi
 
     protected void engineSetParameter(
         AlgorithmParameterSpec params)
-        throws InvalidParameterException
+        throws InvalidAlgorithmParameterException
     {
         if (params instanceof PSSParameterSpec)
         {
@@ -189,31 +188,31 @@ public class PSSSignatureSpi
             {
                 if (!DigestFactory.isSameDigest(originalSpec.getDigestAlgorithm(), newParamSpec.getDigestAlgorithm()))
                 {
-                    throw new InvalidParameterException("parameter must be using " + originalSpec.getDigestAlgorithm());
+                    throw new InvalidAlgorithmParameterException("parameter must be using " + originalSpec.getDigestAlgorithm());
                 }
             }
             if (!newParamSpec.getMGFAlgorithm().equalsIgnoreCase("MGF1") && !newParamSpec.getMGFAlgorithm().equals(PKCSObjectIdentifiers.id_mgf1.getId()))
             {
-                throw new InvalidParameterException("unknown mask generation function specified");
+                throw new InvalidAlgorithmParameterException("unknown mask generation function specified");
             }
             
             if (!(newParamSpec.getMGFParameters() instanceof MGF1ParameterSpec))
             {
-                throw new InvalidParameterException("unkown MGF parameters");
+                throw new InvalidAlgorithmParameterException("unknown MGF parameters");
             }
             
             MGF1ParameterSpec mgfParams = (MGF1ParameterSpec)newParamSpec.getMGFParameters();
             
             if (!DigestFactory.isSameDigest(mgfParams.getDigestAlgorithm(), newParamSpec.getDigestAlgorithm()))
             {
-                throw new InvalidParameterException("digest algorithm for MGF should be the same as for PSS parameters.");
+                throw new InvalidAlgorithmParameterException("digest algorithm for MGF should be the same as for PSS parameters.");
             }
             
             Digest newDigest = DigestFactory.getDigest(mgfParams.getDigestAlgorithm());
             
             if (newDigest == null)
             {
-                throw new InvalidParameterException("no match on MGF digest algorithm: "+ mgfParams.getDigestAlgorithm());
+                throw new InvalidAlgorithmParameterException("no match on MGF digest algorithm: "+ mgfParams.getDigestAlgorithm());
             }
 
             this.engineParams = null;
@@ -226,7 +225,7 @@ public class PSSSignatureSpi
         }
         else
         {
-            throw new InvalidParameterException("Only PSSParameterSpec supported");
+            throw new InvalidAlgorithmParameterException("Only PSSParameterSpec supported");
         }
     }
 
@@ -252,7 +251,7 @@ public class PSSSignatureSpi
     }
     
     /**
-     * @deprecated replaced with <a href = "#engineSetParameter(java.security.spec.AlgorithmParameterSpec)">
+     * @deprecated replaced with <a href="#engineSetParameter(java.security.spec.AlgorithmParameterSpec)">engineSetParameter(java.security.spec.AlgorithmParameterSpec)</a>
      */
     protected void engineSetParameter(
         String param,
@@ -327,6 +326,24 @@ public class PSSSignatureSpi
         public SHA512withRSA()
         {
             super(new RSABlindedEngine(), new PSSParameterSpec("SHA-512", "MGF1", new MGF1ParameterSpec("SHA-512"), 64, 1));
+        }
+    }
+
+    static public class SHA512_224withRSA
+        extends PSSSignatureSpi
+    {
+        public SHA512_224withRSA()
+        {
+            super(new RSABlindedEngine(), new PSSParameterSpec("SHA-512(224)", "MGF1", new MGF1ParameterSpec("SHA-512(224)"), 28, 1));
+        }
+    }
+
+    static public class SHA512_256withRSA
+        extends PSSSignatureSpi
+    {
+        public SHA512_256withRSA()
+        {
+            super(new RSABlindedEngine(), new PSSParameterSpec("SHA-512(256)", "MGF1", new MGF1ParameterSpec("SHA-512(256)"), 32, 1));
         }
     }
 

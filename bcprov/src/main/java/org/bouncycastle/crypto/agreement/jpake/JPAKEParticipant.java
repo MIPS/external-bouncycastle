@@ -55,7 +55,6 @@ import org.bouncycastle.util.Arrays;
  * Each instance should only be used for ONE complete J-PAKE exchange
  * (i.e. a new {@link JPAKEParticipant} should be constructed for each new J-PAKE exchange).
  * <p>
- * See {@link JPAKEExample} for example usage.
  */
 public class JPAKEParticipant
 {
@@ -503,6 +502,7 @@ public class JPAKEParticipant
      * <p>
      * After execution, the {@link #getState() state} will be {@link #STATE_ROUND_3_VALIDATED}.
      *
+     * @param round3PayloadReceived The round 3 payload received from the other participant.
      * @param keyingMaterial The keying material as returned from {@link #calculateKeyingMaterial()}.
      * @throws CryptoException if validation fails.
      * @throws IllegalStateException if called prior to {@link #calculateKeyingMaterial()}, or multiple times

@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -24,18 +26,22 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x9.ECNamedCurveTable;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.CertificateTrustBlock;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.openssl.PasswordFinder;
+import org.bouncycastle.openssl.X509TrustedCertificateBlock;
+import org.bouncycastle.openssl.bc.BcPEMDecryptorProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.InputDecryptorProvider;
@@ -226,7 +232,7 @@ public class ParserTest
         // PKCS7
         //
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        PEMWriter             pWrt = new PEMWriter(new OutputStreamWriter(bOut));
+        JcaPEMWriter pWrt = new JcaPEMWriter(new OutputStreamWriter(bOut));
 
         pWrt.writeObject(d);
 
@@ -272,7 +278,7 @@ public class ParserTest
         doDudPasswordTest("3ee7a8", 10, "DER length more than 4 bytes: 57");
         doDudPasswordTest("41af75", 11, "unknown tag 16 encountered");
         doDudPasswordTest("1704a5", 12, "corrupted stream detected");
-        doDudPasswordTest("1c5822", 13, "unknown object in getInstance: org.bouncycastle.asn1.DERUTF8String");
+        doDudPasswordTest("1c5822", 13, "Extra data detected in stream");
         doDudPasswordTest("5a3d16", 14, "corrupted stream detected");
         doDudPasswordTest("8d0c97", 15, "corrupted stream detected");
         doDudPasswordTest("bc0daf", 16, "corrupted stream detected");
@@ -281,7 +287,7 @@ public class ParserTest
         doNoPasswordTest();
 
         // encrypted private key test
-        InputDecryptorProvider pkcs8Prov = new JceOpenSSLPKCS8DecryptorProviderBuilder().build("password".toCharArray());
+        InputDecryptorProvider pkcs8Prov = new JceOpenSSLPKCS8DecryptorProviderBuilder().setProvider("BC").build("password".toCharArray());
         pemRd = openPEMResource("enckey.pem");
 
         PKCS8EncryptedPrivateKeyInfo encPrivKeyInfo = (PKCS8EncryptedPrivateKeyInfo)pemRd.readObject();
@@ -315,6 +321,54 @@ public class ParserTest
                 fail("decryption of private key data check failed");
             }
         }
+
+        pemRd = openPEMResource("trusted_cert.pem");
+
+        X509TrustedCertificateBlock trusted = (X509TrustedCertificateBlock)pemRd.readObject();
+
+        checkTrustedCert(trusted);
+
+        StringWriter stringWriter = new StringWriter();
+
+        pWrt = new JcaPEMWriter(stringWriter);
+
+        pWrt.writeObject(trusted);
+
+        pWrt.close();
+
+        pemRd = new PEMParser(new StringReader(stringWriter.toString()));
+
+        trusted = (X509TrustedCertificateBlock)pemRd.readObject();
+
+        checkTrustedCert(trusted);
+    }
+
+    private void checkTrustedCert(X509TrustedCertificateBlock trusted)
+    {
+        CertificateTrustBlock trustBlock = trusted.getTrustBlock();
+
+        if (!"Fred".equals(trustBlock.getAlias()))
+        {
+            fail("alias not found");
+        }
+
+        if (trustBlock.getUses().size() != 3)
+        {
+            fail("key purpose usages wrong size");
+        }
+        if (!trustBlock.getUses().contains(KeyPurposeId.id_kp_OCSPSigning))
+        {
+            fail("key purpose use not found");
+        }
+
+        if (trustBlock.getProhibitions().size() != 1)
+        {
+            fail("key purpose prohibitions wrong size");
+        }
+        if (!trustBlock.getProhibitions().contains(KeyPurposeId.id_kp_clientAuth))
+        {
+            fail("key purpose prohibition not found");
+        }
     }
 
     private void keyPairTest(
@@ -324,7 +378,7 @@ public class ParserTest
     {
         PEMParser pemRd;
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        PEMWriter             pWrt = new PEMWriter(new OutputStreamWriter(bOut));
+        JcaPEMWriter             pWrt = new JcaPEMWriter(new OutputStreamWriter(bOut));
         
         pWrt.writeObject(pair.getPublic());
         
@@ -343,7 +397,7 @@ public class ParserTest
         }
         
         bOut = new ByteArrayOutputStream();
-        pWrt = new PEMWriter(new OutputStreamWriter(bOut));
+        pWrt = new JcaPEMWriter(new OutputStreamWriter(bOut));
         
         pWrt.writeObject(pair.getPrivate());
         
@@ -414,8 +468,13 @@ public class ParserTest
         Class   expectedPrivKeyClass)
         throws IOException
     {
-        JcaPEMKeyConverter   converter = new JcaPEMKeyConverter().setProvider("BC");
-        PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().setProvider("BC").build("changeit".toCharArray());
+        keyDecryptTest(fileName, expectedPrivKeyClass, new JcePEMDecryptorProviderBuilder().setProvider("BC").build("changeit".toCharArray()));
+        keyDecryptTest(fileName, expectedPrivKeyClass, new BcPEMDecryptorProvider("changeit".toCharArray()));
+    }
+
+    private void keyDecryptTest(String fileName, Class expectedPrivKeyClass, PEMDecryptorProvider decProv)
+        throws IOException
+    {
         PEMParser pr = openPEMResource("data/" + fileName);
         Object o = pr.readObject();
 
@@ -424,6 +483,7 @@ public class ParserTest
             fail("Didn't find OpenSSL key");
         }
 
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
         KeyPair kp = (o instanceof PEMEncryptedKeyPair) ?
             converter.getKeyPair(((PEMEncryptedKeyPair)o).decryptKeyPair(decProv)) : converter.getKeyPair((PEMKeyPair)o);
 

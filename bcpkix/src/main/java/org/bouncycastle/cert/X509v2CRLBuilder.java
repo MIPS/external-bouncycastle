@@ -11,12 +11,12 @@ import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.TBSCertList;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.asn1.x509.V2TBSCertListGenerator;
-import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.operator.ContentSigner;
 
 /**
@@ -152,22 +152,6 @@ public class X509v2CRLBuilder
 
         return this;
     }
-   
-    /**
-     * Add a CRL entry with extensions.
-     *
-     * @param userCertificateSerial serial number of revoked certificate.
-     * @param revocationDate date of certificate revocation.
-     * @param extensions extension set to be associated with this CRLEntry.
-     * @return the current builder.
-     * @deprecated use method taking Extensions
-     */
-    public X509v2CRLBuilder addCRLEntry(BigInteger userCertificateSerial, Date revocationDate, X509Extensions extensions)
-    {
-        tbsGen.addCRLEntry(new ASN1Integer(userCertificateSerial), new Time(revocationDate), Extensions.getInstance(extensions));
-
-        return this;
-    }
 
     /**
      * Add a CRL entry with extensions.
@@ -240,6 +224,21 @@ public class X509v2CRLBuilder
         throws CertIOException
     {
         extGenerator.addExtension(oid, isCritical, encodedValue);
+
+        return this;
+    }
+
+    /**
+     * Add a given extension field for the standard extensions tag (tag 3).
+     *
+     * @param extension the full extension value.
+     * @return this builder object.
+     */
+    public X509v2CRLBuilder addExtension(
+        Extension extension)
+        throws CertIOException
+    {
+        extGenerator.addExtension(extension);
 
         return this;
     }

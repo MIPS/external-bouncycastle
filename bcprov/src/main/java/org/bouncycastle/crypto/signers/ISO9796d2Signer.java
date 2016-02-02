@@ -1,7 +1,5 @@
 package org.bouncycastle.crypto.signers;
 
-import java.util.Hashtable;
-
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.CryptoException;
@@ -10,7 +8,6 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.SignerWithRecovery;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.util.Arrays;
-import org.bouncycastle.util.Integers;
 
 /**
  * ISO9796-2 - mechanism using a hash function with recovery (scheme 1)
@@ -18,29 +15,22 @@ import org.bouncycastle.util.Integers;
 public class ISO9796d2Signer
     implements SignerWithRecovery
 {
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_IMPLICIT    = 0xBC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_RIPEMD160   = 0x31CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_RIPEMD128   = 0x32CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA1        = 0x33CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA256      = 0x34CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA512      = 0x35CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_SHA384      = 0x36CC;
+    /** @deprecated use ISOTrailers */
     static final public int   TRAILER_WHIRLPOOL   = 0x37CC;
-
-    private static Hashtable  trailerMap          = new Hashtable();
-
-    static
-    {
-        trailerMap.put("RIPEMD128", Integers.valueOf(TRAILER_RIPEMD128));
-        trailerMap.put("RIPEMD160", Integers.valueOf(TRAILER_RIPEMD160));
-
-        trailerMap.put("SHA-1", Integers.valueOf(TRAILER_SHA1));
-        trailerMap.put("SHA-256", Integers.valueOf(TRAILER_SHA256));
-        trailerMap.put("SHA-384", Integers.valueOf(TRAILER_SHA384));
-        trailerMap.put("SHA-512", Integers.valueOf(TRAILER_SHA512));
-
-        trailerMap.put("Whirlpool", Integers.valueOf(TRAILER_WHIRLPOOL));
-    }
 
     private Digest                      digest;
     private AsymmetricBlockCipher       cipher;
@@ -57,8 +47,7 @@ public class ISO9796d2Signer
     private byte[]      preBlock;
 
     /**
-     * Generate a signer for the with either implicit or explicit trailers
-     * for ISO9796-2.
+     * Generate a signer with either implicit or explicit trailers for ISO9796-2.
      * 
      * @param cipher base cipher to use for signature creation/verification
      * @param digest digest to use.
@@ -74,11 +63,11 @@ public class ISO9796d2Signer
 
         if (implicit)
         {
-            trailer = TRAILER_IMPLICIT;
+            trailer = ISOTrailers.TRAILER_IMPLICIT;
         }
         else
         {
-            Integer trailerObj = (Integer)trailerMap.get(digest.getAlgorithmName());
+            Integer trailerObj = ISOTrailers.getTrailer(digest);
 
             if (trailerObj != null)
             {
@@ -86,7 +75,7 @@ public class ISO9796d2Signer
             }
             else
             {
-                throw new IllegalArgumentException("no valid trailer for digest");
+                throw new IllegalArgumentException("no valid trailer for digest: " + digest.getAlgorithmName());
             }
         }
     }
@@ -116,7 +105,7 @@ public class ISO9796d2Signer
 
         block = new byte[(keyBits + 7) / 8];
         
-        if (trailer == TRAILER_IMPLICIT)
+        if (trailer == ISOTrailers.TRAILER_IMPLICIT)
         {
             mBuf = new byte[block.length - digest.getDigestSize() - 2];
         }
@@ -207,7 +196,7 @@ public class ISO9796d2Signer
         else
         {
             int sigTrail = ((block[block.length - 2] & 0xFF) << 8) | (block[block.length - 1] & 0xFF);
-            Integer trailerObj = (Integer)trailerMap.get(digest.getAlgorithmName());
+            Integer trailerObj = ISOTrailers.getTrailer(digest);
 
             if (trailerObj != null)
             {
@@ -347,12 +336,12 @@ public class ISO9796d2Signer
         int t = 0;
         int delta = 0;
 
-        if (trailer == TRAILER_IMPLICIT)
+        if (trailer == ISOTrailers.TRAILER_IMPLICIT)
         {
             t = 8;
             delta = block.length - digSize - 1;
             digest.doFinal(block, delta);
-            block[block.length - 1] = (byte)TRAILER_IMPLICIT;
+            block[block.length - 1] = (byte)ISOTrailers.TRAILER_IMPLICIT;
         }
         else
         {
@@ -374,6 +363,8 @@ public class ISO9796d2Signer
             delta -= mR;
             
             System.arraycopy(mBuf, 0, block, delta, mR);
+
+            recoveredMessage = new byte[mR];
         }
         else
         {
@@ -381,6 +372,8 @@ public class ISO9796d2Signer
             delta -= messageLength;
             
             System.arraycopy(mBuf, 0, block, delta, messageLength);
+
+            recoveredMessage = new byte[messageLength];
         }
         
         if ((delta - 1) > 0)
@@ -400,6 +393,9 @@ public class ISO9796d2Signer
         }
 
         byte[]  b = cipher.processBlock(block, 0, block.length);
+
+        fullMessage = (header & 0x20) == 0;
+        System.arraycopy(mBuf, 0, recoveredMessage, 0, recoveredMessage.length);
 
         clearBlock(mBuf);
         clearBlock(block);
@@ -459,7 +455,7 @@ public class ISO9796d2Signer
         else
         {
             int sigTrail = ((block[block.length - 2] & 0xFF) << 8) | (block[block.length - 1] & 0xFF);
-            Integer trailerObj = (Integer)trailerMap.get(digest.getAlgorithmName());
+            Integer trailerObj = ISOTrailers.getTrailer(digest);
 
             if (trailerObj != null)
             {
@@ -606,7 +602,8 @@ public class ISO9796d2Signer
     }
 
     /**
-     * Return a reference to the recoveredMessage message.
+     * Return a reference to the recoveredMessage message, either as it was added
+     * to a just generated signature, or extracted from a verified one.
      * 
      * @return the full/partial recoveredMessage message.
      * @see org.bouncycastle.crypto.SignerWithRecovery#getRecoveredMessage()

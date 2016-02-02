@@ -259,6 +259,15 @@ public class ISO9796Test
 
         data = eng.generateSignature();
 
+        byte[] recovered = new byte[eng.getRecoveredMessage().length];
+
+        if (!eng.hasFullMessage())
+        {
+            fail("full message not detected");
+        }
+
+        System.arraycopy(eng.getRecoveredMessage(), 0, recovered, 0, recovered.length);
+
         eng.init(false, pubParameters);
 
         if (!isSameAs(sig4, 0, data))
@@ -308,6 +317,11 @@ public class ISO9796Test
                 fail("failed ISO9796-2 updateWithRecovered recovered verify message Test 4");
             }
 
+            if (!isSameAs(eng.getRecoveredMessage(), 0, recovered))
+            {
+                fail("failed ISO9796-2 updateWithRecovered recovered verify message Test 4 generate check");
+            }
+
             // should fail
             eng.updateWithRecoveredMessage(sig4);
 
@@ -343,6 +357,10 @@ public class ISO9796Test
         eng.update(msg5, 1, msg5.length - 1);
 
         data = eng.generateSignature();
+
+        byte[] recovered = new byte[eng.getRecoveredMessage().length];
+
+        System.arraycopy(eng.getRecoveredMessage(), 0, recovered, 0, recovered.length);
 
         eng.init(false, pubParameters);
 
@@ -385,6 +403,11 @@ public class ISO9796Test
         if (!startsWith(msg5, eng.getRecoveredMessage()))
         {
             fail("failed ISO9796-2 updateWithRecovered partial recovered message Test 5");
+        }
+
+        if (!isSameAs(recovered, 0, eng.getRecoveredMessage()))
+        {
+            fail("failed ISO9796-2 updateWithRecovered partial recovered message Test 5 recovery check");
         }
 
         if (eng.hasFullMessage())
@@ -441,6 +464,11 @@ public class ISO9796Test
 
         data = eng.generateSignature();
 
+        if (eng.getRecoveredMessage().length != 0)
+        {
+            fail("failed zero check");
+        }
+
         eng.init(false, pubParameters);
 
         if (!isSameAs(sig6, 1, data))
@@ -476,6 +504,15 @@ public class ISO9796Test
 
         data = eng.generateSignature();
 
+        if (!eng.hasFullMessage())
+        {
+            fail("full message not detected");
+        }
+
+        byte[] recovered = new byte[eng.getRecoveredMessage().length];
+
+        System.arraycopy(eng.getRecoveredMessage(), 0, recovered, 0, recovered.length);
+
         eng.init(false, pubParameters);
 
         if (!isSameAs(sig7, 0, data))
@@ -491,9 +528,19 @@ public class ISO9796Test
             fail("failed ISO9796-2 verify Test 7");
         }
 
+        if (!eng.hasFullMessage())
+        {
+            fail("full message not detected");
+        }
+
         if (!isSameAs(msg7, 0, eng.getRecoveredMessage()))
         {
             fail("failed ISO9796-2 recovery Test 7");
+        }
+
+        if (!isSameAs(recovered, 0, eng.getRecoveredMessage()))
+        {
+            fail("failed ISO9796-2 recovery Test 7 recover");
         }
     }
 
@@ -555,6 +602,10 @@ public class ISO9796Test
 
         data = eng.generateSignature();
 
+        byte[] recovered = new byte[eng.getRecoveredMessage().length];
+
+        System.arraycopy(eng.getRecoveredMessage(), 0, recovered, 0, recovered.length);
+
         eng.init(false, pubParameters);
 
         if (!isSameAs(sig9, 0, data))
@@ -568,6 +619,11 @@ public class ISO9796Test
         if (!eng.verifySignature(sig9))
         {
             fail("failed ISO9796-2 verify Test 9");
+        }
+
+        if (!isSameAs(recovered, 0, eng.getRecoveredMessage()))
+        {
+            fail("failed ISO9796-2 recovery Test 7 recover");
         }
     }
 

@@ -21,7 +21,7 @@ public class BouncyCastlePQCProvider
     extends Provider
     implements ConfigurableProvider
 {
-    private static String info = "BouncyCastle Post-Quantum Security Provider v1.52";
+    private static String info = "BouncyCastle Post-Quantum Security Provider v1.54";
 
     public static String PROVIDER_NAME = "BCPQC";
 
@@ -46,7 +46,7 @@ public class BouncyCastlePQCProvider
      */
     public BouncyCastlePQCProvider()
     {
-        super(PROVIDER_NAME, 1.52, info);
+        super(PROVIDER_NAME, 1.54, info);
 
         AccessController.doPrivileged(new PrivilegedAction()
         {
@@ -122,6 +122,17 @@ public class BouncyCastlePQCProvider
         }
 
         put(key, value);
+    }
+
+    public void addAlgorithm(String type,  ASN1ObjectIdentifier oid, String className)
+    {
+        if (!containsKey(type + "." + className))
+        {
+            throw new IllegalStateException("primary key (" + type + "." + className + ") not found");
+        }
+
+        addAlgorithm(type + "." + oid, className);
+        addAlgorithm(type + ".OID." + oid, className);
     }
 
     public void addKeyInfoConverter(ASN1ObjectIdentifier oid, AsymmetricKeyInfoConverter keyInfoConverter)

@@ -1,5 +1,6 @@
 package org.bouncycastle.crypto.agreement.test;
 
+import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -14,12 +15,31 @@ public class AllTests
 
     public static Test suite()
     {
-        TestSuite suite = new TestSuite("JPKAE Engine Tests");
+        TestSuite suite = new TestSuite("JPAKE Engine Tests");
 
         suite.addTestSuite(JPAKEParticipantTest.class);
         suite.addTestSuite(JPAKEPrimeOrderGroupTest.class);
         suite.addTestSuite(JPAKEUtilTest.class);
 
-        return suite;
+        return new BCTestSetup(suite);
+    }
+
+    static class BCTestSetup
+        extends TestSetup
+    {
+        public BCTestSetup(Test test)
+        {
+            super(test);
+        }
+
+        protected void setUp()
+        {
+
+        }
+
+        protected void tearDown()
+        {
+
+        }
     }
 }

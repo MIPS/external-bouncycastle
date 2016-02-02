@@ -76,6 +76,10 @@ public class X931RNG
         if (predictionResistant || V == null)
         {
             V = entropySource.getEntropy();
+            if (V.length != engine.getBlockSize())
+            {
+                throw new IllegalStateException("Insufficient entropy returned");
+            }
         }
 
         int m = output.length / R.length;
@@ -115,7 +119,16 @@ public class X931RNG
     void reseed()
     {
         V = entropySource.getEntropy();
+        if (V.length != engine.getBlockSize())
+        {
+            throw new IllegalStateException("Insufficient entropy returned");
+        }
         reseedCounter = 1;
+    }
+
+    EntropySource getEntropySource()
+    {
+        return entropySource;
     }
 
     private void process(byte[] res, byte[] a, byte[] b)

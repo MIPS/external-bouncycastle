@@ -394,7 +394,7 @@ public final class DES
     {
         public PBEWithMD2()
         {
-            super(new CBCBlockCipher(new DESEngine()));
+            super(new CBCBlockCipher(new DESEngine()), PKCS5S1, MD2, 64, 8);
         }
     }
 
@@ -406,7 +406,7 @@ public final class DES
     {
         public PBEWithMD5()
         {
-            super(new CBCBlockCipher(new DESEngine()));
+            super(new CBCBlockCipher(new DESEngine()), PKCS5S1, MD5, 64, 8);
         }
     }
 
@@ -418,7 +418,7 @@ public final class DES
     {
         public PBEWithSHA1()
         {
-            super(new CBCBlockCipher(new DESEngine()));
+            super(new CBCBlockCipher(new DESEngine()), PKCS5S1, SHA1, 64, 8);
         }
     }
     
@@ -436,7 +436,7 @@ public final class DES
         {
 
             provider.addAlgorithm("Cipher.DES", PREFIX + "$ECB");
-            provider.addAlgorithm("Cipher." + OIWObjectIdentifiers.desCBC, PREFIX + "$CBC");
+            provider.addAlgorithm("Cipher", OIWObjectIdentifiers.desCBC, PREFIX + "$CBC");
 
             addAlias(provider, OIWObjectIdentifiers.desCBC, "DES");
 
@@ -470,7 +470,7 @@ public final class DES
             provider.addAlgorithm("Alg.Alias.Mac.ISO9797ALG3MACWITHISO7816-4PADDING", "ISO9797ALG3WITHISO7816-4PADDING");
 
             provider.addAlgorithm("AlgorithmParameters.DES", PACKAGE + ".util.IvAlgorithmParameters");
-            provider.addAlgorithm("Alg.Alias.AlgorithmParameters." + OIWObjectIdentifiers.desCBC, "DES");
+            provider.addAlgorithm("Alg.Alias.AlgorithmParameters", OIWObjectIdentifiers.desCBC, "DES");
 
             provider.addAlgorithm("AlgorithmParameterGenerator.DES",  PREFIX + "$AlgParamGen");
             provider.addAlgorithm("Alg.Alias.AlgorithmParameterGenerator." + OIWObjectIdentifiers.desCBC, "DES");
@@ -479,10 +479,14 @@ public final class DES
             provider.addAlgorithm("Cipher.PBEWITHMD5ANDDES", PREFIX + "$PBEWithMD5");
             provider.addAlgorithm("Cipher.PBEWITHSHA1ANDDES", PREFIX + "$PBEWithSHA1");
             
-            provider.addAlgorithm("Alg.Alias.Cipher." + PKCSObjectIdentifiers.pbeWithMD2AndDES_CBC, "PBEWITHMD2ANDDES");
-            provider.addAlgorithm("Alg.Alias.Cipher." + PKCSObjectIdentifiers.pbeWithMD5AndDES_CBC, "PBEWITHMD5ANDDES");
-            provider.addAlgorithm("Alg.Alias.Cipher." + PKCSObjectIdentifiers.pbeWithSHA1AndDES_CBC, "PBEWITHSHA1ANDDES");
-            
+            provider.addAlgorithm("Alg.Alias.Cipher", PKCSObjectIdentifiers.pbeWithMD2AndDES_CBC, "PBEWITHMD2ANDDES");
+            provider.addAlgorithm("Alg.Alias.Cipher", PKCSObjectIdentifiers.pbeWithMD5AndDES_CBC, "PBEWITHMD5ANDDES");
+            provider.addAlgorithm("Alg.Alias.Cipher", PKCSObjectIdentifiers.pbeWithSHA1AndDES_CBC, "PBEWITHSHA1ANDDES");
+
+            provider.addAlgorithm("Alg.Alias.Cipher.PBEWITHMD2ANDDES-CBC", "PBEWITHMD2ANDDES");
+            provider.addAlgorithm("Alg.Alias.Cipher.PBEWITHMD5ANDDES-CBC", "PBEWITHMD5ANDDES");
+            provider.addAlgorithm("Alg.Alias.Cipher.PBEWITHSHA1ANDDES-CBC", "PBEWITHSHA1ANDDES");
+
             provider.addAlgorithm("SecretKeyFactory.PBEWITHMD2ANDDES", PREFIX + "$PBEWithMD2KeyFactory");
             provider.addAlgorithm("SecretKeyFactory.PBEWITHMD5ANDDES", PREFIX + "$PBEWithMD5KeyFactory");
             provider.addAlgorithm("SecretKeyFactory.PBEWITHSHA1ANDDES", PREFIX + "$PBEWithSHA1KeyFactory");

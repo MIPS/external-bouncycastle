@@ -5,9 +5,8 @@ import java.math.BigInteger;
 
 /**
  * This interface defines a finite field element. It is implemented by the
- * classes {@link GFPElement} and {@link GF2nElement}.
+ * class {@link GF2nElement}.
  *
- * @see GFPElement
  * @see GF2nElement
  */
 public interface GFElement
@@ -58,7 +57,6 @@ public interface GFElement
      *
      * @param addend the addend
      * @return <tt>this + other</tt> (newly created)
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     GFElement add(GFElement addend)
         throws RuntimeException;
@@ -67,7 +65,6 @@ public interface GFElement
      * Compute the sum of this element and the addend, overwriting this element.
      *
      * @param addend the addend
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     void addToThis(GFElement addend)
         throws RuntimeException;
@@ -77,7 +74,6 @@ public interface GFElement
      *
      * @param minuend the minuend
      * @return <tt>this - minuend</tt> (newly created)
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     GFElement subtract(GFElement minuend)
         throws RuntimeException;
@@ -87,7 +83,6 @@ public interface GFElement
      * overwriting this element.
      *
      * @param minuend the minuend
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     void subtractFromThis(GFElement minuend);
 
@@ -96,7 +91,6 @@ public interface GFElement
      *
      * @param factor the factor
      * @return <tt>this * factor</tt> (newly created)
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     GFElement multiply(GFElement factor)
         throws RuntimeException;
@@ -105,7 +99,6 @@ public interface GFElement
      * Compute <tt>this * factor</tt> (overwrite <tt>this</tt>).
      *
      * @param factor the factor
-     * @throws DifferentFieldsException if the elements are of different fields.
      */
     void multiplyThisBy(GFElement factor)
         throws RuntimeException;

@@ -1,9 +1,18 @@
 package org.bouncycastle.cms.test;
 
 import java.io.IOException;
-import java.security.*;
+import java.io.InputStreamReader;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
@@ -16,6 +25,7 @@ import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import javax.crypto.spec.SecretKeySpec;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -23,10 +33,15 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.DERUTF8String;
-import org.bouncycastle.asn1.cms.*;
+import org.bouncycastle.asn1.cms.Attribute;
+import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.cms.ContentInfo;
+import org.bouncycastle.asn1.cms.EncryptedContentInfo;
+import org.bouncycastle.asn1.cms.EnvelopedData;
 import org.bouncycastle.asn1.kisa.KISAObjectIdentifiers;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.asn1.ntt.NTTObjectIdentifiers;
@@ -36,12 +51,14 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cms.CMSAlgorithm;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.KeyAgreeRecipientInformation;
 import org.bouncycastle.cms.KeyTransRecipientInformation;
 import org.bouncycastle.cms.OriginatorInfoGenerator;
 import org.bouncycastle.cms.OriginatorInformation;
@@ -65,8 +82,11 @@ import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
 import org.bouncycastle.cms.jcajce.JcePasswordEnvelopedRecipient;
 import org.bouncycastle.cms.jcajce.JcePasswordRecipientInfoGenerator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaAlgorithmParametersConverter;
+import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -95,6 +115,12 @@ public class NewEnvelopedDataTest
     private static X509Certificate _reciEcCert;
     private static KeyPair         _reciEcKP2;
     private static X509Certificate _reciEcCert2;
+    private static KeyPair         _reciKemsKP;
+    private static X509Certificate _reciKemsCert;
+
+    private static KeyPair         _origDhKP;
+    private static KeyPair         _reciDhKP;
+    private static X509Certificate _reciDhCert;
 
     private static boolean         _initialised = false;
 
@@ -215,6 +241,12 @@ public class NewEnvelopedDataTest
     {
     }
 
+    public void setUp()
+        throws Exception
+    {
+        init();
+    }
+
     private static void init()
         throws Exception
     {
@@ -242,6 +274,13 @@ public class NewEnvelopedDataTest
             _reciEcCert = CMSTestUtil.makeCertificate(_reciEcKP, _reciDN, _signKP, _signDN);
             _reciEcKP2 = CMSTestUtil.makeEcDsaKeyPair();
             _reciEcCert2 = CMSTestUtil.makeCertificate(_reciEcKP2, _reciDN2, _signKP, _signDN);
+
+            _origDhKP = CMSTestUtil.makeDhKeyPair();
+            _reciDhKP = CMSTestUtil.makeDhKeyPair();
+            _reciDhCert = CMSTestUtil.makeCertificate(_reciDhKP, _reciDN, _signKP, _signDN);
+
+            _reciKemsKP = CMSTestUtil.makeKeyPair();
+            _reciKemsCert = CMSTestUtil.makeCertificate(_reciKemsKP, _reciDN, _signKP, _signDN, new AlgorithmIdentifier(PKCSObjectIdentifiers.id_rsa_KEM));
         }
     }
 
@@ -310,6 +349,52 @@ public class NewEnvelopedDataTest
             assertEquals(true, Arrays.equals(data, recData));
         }
     }
+
+    // TODO: add KEMS to provider.
+//    public void testRsaKEMS()
+//        throws Exception
+//    {
+//        byte[]          data     = "WallaWallaWashington".getBytes();
+//
+//        CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
+//
+//        edGen.addRecipientInfoGenerator(new JceKeyTransRecipientInfoGenerator(_reciKemsCert).setProvider(BC));
+//
+//        CMSEnvelopedData ed = edGen.generate(
+//                                new CMSProcessableByteArray(data),
+//                                new JceCMSContentEncryptorBuilder(CMSAlgorithm.DES_EDE3_CBC).setProvider(BC).build());
+//
+//        RecipientInformationStore  recipients = ed.getRecipientInfos();
+//
+//
+//        assertEquals(ed.getEncryptionAlgOID(), CMSEnvelopedDataGenerator.DES_EDE3_CBC);
+//
+//        Collection  c = recipients.getRecipients();
+//
+//        assertEquals(2, c.size());
+//
+//        Iterator    it = c.iterator();
+//
+//        while (it.hasNext())
+//        {
+//            RecipientInformation   recipient = (RecipientInformation)it.next();
+//
+//            assertEquals(recipient.getKeyEncryptionAlgOID(), PKCSObjectIdentifiers.rsaEncryption.getId());
+//
+//            byte[] recData = recipient.getContent(new JceKeyTransEnvelopedRecipient(_reciKP.getPrivate()).setProvider(BC));
+//
+//            assertEquals(true, Arrays.equals(data, recData));
+//        }
+//
+//        RecipientId id = new JceKeyTransRecipientId(_reciCert);
+//
+//        Collection collection = recipients.getRecipients(id);
+//        if (collection.size() != 2)
+//        {
+//            fail("recipients not matched using general recipient ID.");
+//        }
+//        assertTrue(collection.iterator().next() instanceof RecipientInformation);
+//    }
 
     public void testKeyTrans()
         throws Exception
@@ -1233,14 +1318,178 @@ public class NewEnvelopedDataTest
         confirmNumberRecipients(recipients, 1);
     }
 
-    public void testECMQVKeyAgree()
+    public void testFaultyAgreementRecipient()
+        throws Exception
+    {
+        ASN1ObjectIdentifier algorithm = CMSAlgorithm.ECDH_SHA1KDF;
+        byte[] data = Hex.decode("504b492d4320434d5320456e76656c6f706564446174612053616d706c65");
+
+        CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
+
+        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(algorithm,
+            _origEcKP.getPrivate(), _origEcKP.getPublic(),
+            CMSAlgorithm.AES128_WRAP).setProvider(BC));
+
+        try
+        {
+            edGen.generate(
+                new CMSProcessableByteArray(data),
+                new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC).setProvider(BC).build());
+        }
+        catch (CMSException e)
+        {
+            assertEquals(e.getMessage(), "No recipients associated with generator - use addRecipient()");
+        }
+    }
+
+    public void testKeyWrapAlgorithmIdentifiers()
+        throws Exception
+    {
+        byte[] data = Hex.decode("504b492d4320434d5320456e76656c6f706564446174612053616d706c65");
+
+        doVerifyKeyWrap(data, CMSAlgorithm.DES_EDE3_WRAP, false);
+        doVerifyKeyWrap(data, CMSAlgorithm.AES128_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.AES192_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.AES256_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.CAMELLIA128_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.CAMELLIA192_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.CAMELLIA256_WRAP, true);
+        doVerifyKeyWrap(data, CMSAlgorithm.SEED_WRAP, true);
+    }
+
+    private void doVerifyKeyWrap(byte[] data, ASN1ObjectIdentifier wrapAlgorithm, boolean paramsAbsent)
+        throws CertificateEncodingException, CMSException, NoSuchProviderException, IOException
+    {
+        CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
+
+        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(CMSAlgorithm.ECDH_SHA256KDF,
+            _origEcKP.getPrivate(), _origEcKP.getPublic(),
+            wrapAlgorithm).addRecipient(_reciEcCert).setProvider(BC));
+
+        CMSEnvelopedData ed = edGen.generate(
+            new CMSProcessableByteArray(data),
+            new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC).setProvider(BC).build());
+
+        assertEquals(ed.getEncryptionAlgOID(), CMSEnvelopedDataGenerator.AES128_CBC);
+
+        RecipientInformationStore recipients = ed.getRecipientInfos();
+
+        KeyAgreeRecipientInformation recipientInformation = (KeyAgreeRecipientInformation)recipients.get(new JceKeyAgreeRecipientId(_reciEcCert));
+        AlgorithmIdentifier keyWrapAlg = AlgorithmIdentifier.getInstance(recipientInformation.getKeyEncryptionAlgorithm().getParameters());
+
+        assertEquals(wrapAlgorithm, keyWrapAlg.getAlgorithm());
+        if (paramsAbsent)
+        {
+            assertNull(keyWrapAlg.getParameters());
+        }
+        else
+        {
+            assertNotNull(keyWrapAlg.getParameters());
+        }
+
+        assertEquals(ed.getEncryptionAlgOID(), CMSEnvelopedDataGenerator.AES128_CBC);
+
+        confirmDataReceived(recipients, data, _reciEcCert, _reciEcKP.getPrivate(), BC);
+        confirmNumberRecipients(recipients, 1);
+    }
+
+    public void testEphemeralStaticDHAgreement()
         throws Exception
     {
         byte[] data = Hex.decode("504b492d4320434d5320456e76656c6f706564446174612053616d706c65");
 
         CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
 
-        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(CMSAlgorithm.ECMQV_SHA1KDF,
+        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(PKCSObjectIdentifiers.id_alg_ESDH,
+            _origDhKP.getPrivate(), _origDhKP.getPublic(),
+            CMSAlgorithm.AES128_WRAP).addRecipient(_reciDhCert).setProvider(BC));
+
+        CMSEnvelopedData ed = edGen.generate(
+            new CMSProcessableByteArray(data),
+            new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC).setProvider(BC).build());
+
+        assertEquals(ed.getEncryptionAlgOID(), CMSEnvelopedDataGenerator.AES128_CBC);
+
+        RecipientInformationStore recipients = ed.getRecipientInfos();
+
+        confirmDataReceived(recipients, data, _reciDhCert, _reciDhKP.getPrivate(), BC);
+        confirmNumberRecipients(recipients, 1);
+    }
+
+    public void testStaticStaticDHAgreement()
+        throws Exception
+    {
+        byte[] data = Hex.decode("504b492d4320434d5320456e76656c6f706564446174612053616d706c65");
+
+        CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
+
+        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(PKCSObjectIdentifiers.id_alg_SSDH,
+            _origDhKP.getPrivate(), _origDhKP.getPublic(),
+            CMSAlgorithm.AES128_WRAP)
+            .setUserKeyingMaterial(data)
+            .addRecipient(_reciDhCert)
+            .setProvider(BC));
+
+        CMSEnvelopedData ed = edGen.generate(
+            new CMSProcessableByteArray(data),
+            new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC).setProvider(BC).build());
+
+        assertEquals(ed.getEncryptionAlgOID(), CMSEnvelopedDataGenerator.AES128_CBC);
+
+        RecipientInformationStore recipients = ed.getRecipientInfos();
+
+        confirmDataReceived(recipients, data, _reciDhCert, _reciDhKP.getPrivate(), BC);
+        confirmNumberRecipients(recipients, 1);
+
+        try
+        {
+            edGen = new CMSEnvelopedDataGenerator();
+
+            edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(PKCSObjectIdentifiers.id_alg_SSDH,
+                        _origDhKP.getPrivate(), _origDhKP.getPublic(),
+                        CMSAlgorithm.AES128_WRAP).addRecipient(_reciDhCert).setProvider(BC));
+
+            edGen.generate(
+                 new CMSProcessableByteArray(data),
+                 new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC).setProvider(BC).build());
+            fail("no UKM uncaught");
+        }
+        catch (CMSException e)
+        {
+            Assert.assertEquals("User keying material must be set for static keys.", e.getMessage());
+        }
+    }
+
+    public void testKDFAgreements()
+        throws Exception
+    {
+        byte[] data = Hex.decode("504b492d4320434d5320456e76656c6f706564446174612053616d706c65");
+
+        doTryAgreement(data, CMSAlgorithm.ECDH_SHA1KDF);
+        doTryAgreement(data, CMSAlgorithm.ECDH_SHA224KDF);
+        doTryAgreement(data, CMSAlgorithm.ECDH_SHA256KDF);
+        doTryAgreement(data, CMSAlgorithm.ECDH_SHA384KDF);
+        doTryAgreement(data, CMSAlgorithm.ECDH_SHA512KDF);
+
+        doTryAgreement(data, CMSAlgorithm.ECCDH_SHA1KDF);
+        doTryAgreement(data, CMSAlgorithm.ECCDH_SHA224KDF);
+        doTryAgreement(data, CMSAlgorithm.ECCDH_SHA256KDF);
+        doTryAgreement(data, CMSAlgorithm.ECCDH_SHA384KDF);
+        doTryAgreement(data, CMSAlgorithm.ECCDH_SHA512KDF);
+
+        doTryAgreement(data, CMSAlgorithm.ECMQV_SHA1KDF);
+        doTryAgreement(data, CMSAlgorithm.ECMQV_SHA224KDF);
+        doTryAgreement(data, CMSAlgorithm.ECMQV_SHA256KDF);
+        doTryAgreement(data, CMSAlgorithm.ECMQV_SHA384KDF);
+        doTryAgreement(data, CMSAlgorithm.ECMQV_SHA512KDF);
+    }
+
+    private void doTryAgreement(byte[] data, ASN1ObjectIdentifier algorithm)
+        throws CertificateEncodingException, CMSException, NoSuchProviderException, IOException
+    {
+        CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
+
+        edGen.addRecipientInfoGenerator(new JceKeyAgreeRecipientInfoGenerator(algorithm,
             _origEcKP.getPrivate(), _origEcKP.getPublic(),
             CMSAlgorithm.AES128_WRAP).addRecipient(_reciEcCert).setProvider(BC));
 
@@ -1418,6 +1667,61 @@ public class NewEnvelopedDataTest
 
         assertEquals(new X500Name("C=US,O=U.S. Government,OU=HSPD12Lab,OU=Agents,CN=user1"), ((X509CertificateHolder)origInfo.getCertificates().getMatches(null).iterator().next()).getSubject());
         assertEquals(CMSEnvelopedDataGenerator.DES_EDE3_CBC, env.getEncryptionAlgOID());
+    }
+
+    public void testOpenSSLVectors()
+        throws Exception
+    {
+        byte[] expected = Strings.toByteArray("abcdefghijklmnopqrstuvwxyz0123456789\r\n");
+
+        PEMParser pemParser = new PEMParser(new InputStreamReader(getClass().getResourceAsStream("ecdh/ecc.key")));
+
+        pemParser.readObject();  // skip the curve definition
+
+        PEMKeyPair kp = (PEMKeyPair)pemParser.readObject();
+
+        KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
+
+        ECPrivateKey ecKey = (ECPrivateKey)keyFactory.generatePrivate(new PKCS8EncodedKeySpec(kp.getPrivateKeyInfo().getEncoded()));
+
+        pemParser = new PEMParser(new InputStreamReader(getClass().getResourceAsStream("ecdh/ecc.crt")));
+
+        X509Certificate x509Certificate = new JcaX509CertificateConverter().setProvider("BC").getCertificate((X509CertificateHolder)pemParser.readObject());
+
+        processInput(ecKey, expected, "ecdh/encSess1.asc", new AlgorithmIdentifier(PKCSObjectIdentifiers.id_alg_CMS3DESwrap, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess2.asc", new AlgorithmIdentifier(PKCSObjectIdentifiers.id_alg_CMS3DESwrap, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess3.asc", new AlgorithmIdentifier(CMSAlgorithm.AES128_WRAP, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess4.asc", new AlgorithmIdentifier(CMSAlgorithm.AES128_WRAP, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess5.asc", new AlgorithmIdentifier(CMSAlgorithm.AES192_WRAP, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess6.asc", new AlgorithmIdentifier(CMSAlgorithm.AES192_WRAP, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess7.asc", new AlgorithmIdentifier(CMSAlgorithm.AES256_WRAP, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSess8.asc", new AlgorithmIdentifier(CMSAlgorithm.AES256_WRAP, DERNull.INSTANCE));
+
+        processInput(ecKey, expected, "ecdh/encSessA.asc", new AlgorithmIdentifier(PKCSObjectIdentifiers.id_alg_CMS3DESwrap, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSessB.asc", new AlgorithmIdentifier(PKCSObjectIdentifiers.id_alg_CMS3DESwrap, DERNull.INSTANCE));
+        processInput(ecKey, expected, "ecdh/encSessC.asc", new AlgorithmIdentifier(CMSAlgorithm.AES128_WRAP));
+        processInput(ecKey, expected, "ecdh/encSessD.asc", new AlgorithmIdentifier(CMSAlgorithm.AES128_WRAP));
+        processInput(ecKey, expected, "ecdh/encSessE.asc", new AlgorithmIdentifier(CMSAlgorithm.AES192_WRAP));
+        processInput(ecKey, expected, "ecdh/encSessF.asc", new AlgorithmIdentifier(CMSAlgorithm.AES192_WRAP));
+        processInput(ecKey, expected, "ecdh/encSessG.asc", new AlgorithmIdentifier(CMSAlgorithm.AES256_WRAP));
+        processInput(ecKey, expected, "ecdh/encSessH.asc", new AlgorithmIdentifier(CMSAlgorithm.AES256_WRAP));
+    }
+
+    private void processInput(ECPrivateKey ecKey, byte[] expected, String input, AlgorithmIdentifier wrapAlg)
+        throws CMSException, IOException
+    {
+        PEMParser pemParser;
+        pemParser = new PEMParser(new InputStreamReader(getClass().getResourceAsStream(input)));
+
+        CMSEnvelopedData envData = new CMSEnvelopedData((ContentInfo)pemParser.readObject());
+
+        KeyAgreeRecipientInformation recip = (KeyAgreeRecipientInformation)envData.getRecipientInfos().getRecipients().iterator().next();
+
+        TestCase.assertEquals(wrapAlg, AlgorithmIdentifier.getInstance(recip.getKeyEncryptionAlgorithm().getParameters()));
+
+        byte[] decrypted = recip.getContent(new JceKeyAgreeEnvelopedRecipient(ecKey).setProvider("BC"));
+
+        TestCase.assertTrue(Arrays.equals(expected, decrypted));
     }
 
     private void passwordTest(String algorithm)

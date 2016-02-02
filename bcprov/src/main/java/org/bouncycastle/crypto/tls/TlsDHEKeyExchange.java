@@ -79,7 +79,7 @@ public class TlsDHEKeyExchange
 
         ServerDHParams dhParams = ServerDHParams.parse(teeIn);
 
-        DigitallySigned signed_params = DigitallySigned.parse(context, input);
+        DigitallySigned signed_params = parseSignature(input);
 
         Signer signer = initVerifyer(tlsSigner, signed_params.getAlgorithm(), securityParameters);
         buf.updateSigner(signer);
@@ -89,7 +89,7 @@ public class TlsDHEKeyExchange
         }
 
         this.dhAgreePublicKey = TlsDHUtils.validateDHPublicKey(dhParams.getPublicKey());
-        this.dhParameters = dhAgreePublicKey.getParameters();
+        this.dhParameters = validateDHParameters(dhAgreePublicKey.getParameters());
     }
 
     protected Signer initVerifyer(TlsSigner tlsSigner, SignatureAndHashAlgorithm algorithm, SecurityParameters securityParameters)

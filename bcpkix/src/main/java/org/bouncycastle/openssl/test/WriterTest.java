@@ -21,10 +21,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.openssl.PasswordFinder;
+import org.bouncycastle.openssl.bc.BcPEMDecryptorProvider;
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.openssl.jcajce.JcePEMEncryptorBuilder;
 import org.bouncycastle.util.encoders.Base64;
@@ -133,7 +134,7 @@ public class WriterTest
         doWriteReadTests(privKey, "BC", algorithms);
 
         // override test
-        PEMWriter pWrt = new PEMWriter(new OutputStreamWriter(new ByteArrayOutputStream()));
+        JcaPEMWriter pWrt = new JcaPEMWriter(new OutputStreamWriter(new ByteArrayOutputStream()));
 
         Object o = new PemObject("FRED", new byte[100]);
         pWrt.writeObject(o);
@@ -159,7 +160,7 @@ public class WriterTest
         throws IOException
     {
         StringWriter sw = new StringWriter();
-        PEMWriter pw = new PEMWriter(sw);
+        JcaPEMWriter pw = new JcaPEMWriter(sw);
 
         pw.writeObject(akp);
         pw.close();
@@ -191,7 +192,7 @@ public class WriterTest
         throws IOException
     {
         StringWriter sw = new StringWriter();
-        PEMWriter pw = new PEMWriter(sw);
+        JcaPEMWriter pw = new JcaPEMWriter(sw);
 
         pw.writeObject(new JcaMiscPEMGenerator(akp, new JcePEMEncryptorBuilder(algorithm).setSecureRandom(random).build(testPassword)));
         pw.close();
@@ -235,6 +236,14 @@ public class WriterTest
         if (!akp.equals(privKey))
         {
             fail("Failed to read back test key encoded with: " + algorithm);
+        }
+
+        kp = new JcaPEMKeyConverter().setProvider("BC").getKeyPair(((PEMEncryptedKeyPair)o).decryptKeyPair(new BcPEMDecryptorProvider(testPassword)));
+        privKey = kp.getPrivate();
+
+        if (!akp.equals(privKey))
+        {
+            fail("BC failed to read back test key encoded with: " + algorithm);
         }
     }
 

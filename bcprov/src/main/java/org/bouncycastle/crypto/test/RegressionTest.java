@@ -34,6 +34,7 @@ public class RegressionTest
         new RC6Test(),
         new RijndaelTest(),
         new SerpentTest(),
+        new TnepresTest(),
         new CamelliaTest(),
         new CamelliaLightTest(),
         new DigestRandomNumberTest(),
@@ -140,7 +141,11 @@ public class RegressionTest
         new CramerShoupTest(),
         new BCryptTest(),
         new OpenBSDBCryptTest(),
-        new X931SignerTest()
+        new X931SignerTest(),
+        new Blake2bDigestTest(),
+        new KeccakDigestTest(),
+        new SHAKEDigestTest(),
+        new SM4Test()
     };
 
     public static void main(

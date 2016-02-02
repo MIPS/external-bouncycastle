@@ -10,11 +10,13 @@ import javax.crypto.spec.IvParameterSpec;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherKeyGenerator;
 import org.bouncycastle.crypto.engines.Shacal2Engine;
+import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.jcajce.provider.config.ConfigurableProvider;
 import org.bouncycastle.jcajce.provider.symmetric.util.BaseAlgorithmParameterGenerator;
 import org.bouncycastle.jcajce.provider.symmetric.util.BaseBlockCipher;
 import org.bouncycastle.jcajce.provider.symmetric.util.BaseKeyGenerator;
+import org.bouncycastle.jcajce.provider.symmetric.util.BaseMac;
 import org.bouncycastle.jcajce.provider.symmetric.util.BlockCipherProvider;
 import org.bouncycastle.jcajce.provider.symmetric.util.IvAlgorithmParameters;
 
@@ -48,12 +50,21 @@ public final class Shacal2
         }
     }
 
+    public static class CMAC
+        extends BaseMac
+    {
+        public CMAC()
+        {
+            super(new CMac(new Shacal2Engine()));
+        }
+    }
+
     public static class KeyGen
         extends BaseKeyGenerator
     {
         public KeyGen()
         {
-            super("Shacal2", 512, new CipherKeyGenerator());//key size
+            super("SHACAL-2", 128, new CipherKeyGenerator());//key size
         }
     }
 
@@ -114,10 +125,16 @@ public final class Shacal2
 
         public void configure(ConfigurableProvider provider)
         {
+            provider.addAlgorithm("Mac.Shacal-2CMAC", PREFIX + "$CMAC");
+
             provider.addAlgorithm("Cipher.Shacal2", PREFIX + "$ECB");
+            provider.addAlgorithm("Cipher.SHACAL-2", PREFIX + "$ECB");
             provider.addAlgorithm("KeyGenerator.Shacal2", PREFIX + "$KeyGen");        
             provider.addAlgorithm("AlgorithmParameterGenerator.Shacal2", PREFIX + "$AlgParamGen");
         	provider.addAlgorithm("AlgorithmParameters.Shacal2", PREFIX + "$AlgParams");
+            provider.addAlgorithm("KeyGenerator.SHACAL-2", PREFIX + "$KeyGen");
+            provider.addAlgorithm("AlgorithmParameterGenerator.SHACAL-2", PREFIX + "$AlgParamGen");
+        	provider.addAlgorithm("AlgorithmParameters.SHACAL-2", PREFIX + "$AlgParams");
         }
     }
 }

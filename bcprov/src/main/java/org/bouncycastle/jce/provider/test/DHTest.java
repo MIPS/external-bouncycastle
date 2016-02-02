@@ -570,7 +570,7 @@ public class DHTest
         }
     }
 
-    private void testECDH(String algorithm, String cipher, int keyLen)
+    private void testECDH(String algorithm, String curveName, String cipher, int keyLen)
         throws Exception
     {
         ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec("secp521r1");
@@ -863,9 +863,9 @@ public class DHTest
              384);
 
         DHParameterSpec dhSpec1024 = new DHParameterSpec(
-                    new BigInteger("f7e1a085d69b3ddecbbcab5c36b857b97994afbbfa3aea82f9574c0b3d0782675159578ebad4594fe67107108180b449167123e84c281613b7cf09328cc8a6e13c167a8b547c8d28e0a3ae1e2bb3a675916ea37f0bfa213562f1fb627a01243bcca4f1bea8519089a883dfe15ae59f06928b665e807b552564014c3bfecf492a", 16),
-                    new BigInteger("fd7f53811d75122952df4a9c2eece4e7f611b7523cef4400c31e3f80b6512669455d402251fb593d8d58fabfc5f5ba30f6cb9b556cd7813b801d346ff26660b76b9950a5a49f9fe8047b1022c24fbba9d7feb7c61bf83b57e7c6a8a6150f04fb83f6d3c51ec3023554135a169132f675f3ae2b61d72aeff22203199dd14801c7", 16),
-                    512);
+            new BigInteger("fd7f53811d75122952df4a9c2eece4e7f611b7523cef4400c31e3f80b6512669455d402251fb593d8d58fabfc5f5ba30f6cb9b556cd7813b801d346ff26660b76b9950a5a49f9fe8047b1022c24fbba9d7feb7c61bf83b57e7c6a8a6150f04fb83f6d3c51ec3023554135a169132f675f3ae2b61d72aeff22203199dd14801c7", 16),
+            new BigInteger("f7e1a085d69b3ddecbbcab5c36b857b97994afbbfa3aea82f9574c0b3d0782675159578ebad4594fe67107108180b449167123e84c281613b7cf09328cc8a6e13c167a8b547c8d28e0a3ae1e2bb3a675916ea37f0bfa213562f1fb627a01243bcca4f1bea8519089a883dfe15ae59f06928b665e807b552564014c3bfecf492a", 16),
+            512);
 
         prov.setParameter(ConfigurableProvider.DH_DEFAULT_PARAMS, dhSpec512);
 
@@ -967,11 +967,16 @@ public class DHTest
 
         testECDH("ECDH");
         testECDH("ECDHC");
-        testECDH("ECDH", "AES", 256);
-        testECDH("ECDH", "DESEDE", 192);
-        testECDH("ECDH", "DES", 64);
-        testECDH("ECDHwithSHA1KDF", "AES", 256);
-        testECDH("ECDHwithSHA1KDF", "DESEDE", 192);
+        testECDH("ECDH", "secp521r1", "AES", 256);
+        testECDH("ECDH", "secp521r1", "DESEDE", 192);
+        testECDH("ECDH", "secp521r1", "DES", 64);
+        testECDH("ECDHwithSHA1KDF", "secp521r1", "AES", 256);
+        testECDH("ECDHwithSHA1KDF", "secp521r1", "DESEDE", 192);
+        testECDH("ECDH", "Curve25519", "AES", 256);
+        testECDH("ECDH", "Curve25519", "DESEDE", 192);
+        testECDH("ECDH", "Curve25519", "DES", 64);
+        testECDH("ECDHwithSHA1KDF", "Curve25519", "AES", 256);
+        testECDH("ECDHwithSHA1KDF", "Curve25519", "DESEDE", 192);
 
         testExceptions();
         testDESAndDESede(g768, p768);

@@ -14,10 +14,10 @@ import org.bouncycastle.asn1.ASN1Exception;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
@@ -33,7 +33,6 @@ import org.bouncycastle.cert.ocsp.Req;
 import org.bouncycastle.cert.ocsp.RespID;
 import org.bouncycastle.cert.ocsp.SingleResp;
 import org.bouncycastle.cert.ocsp.jcajce.JcaBasicOCSPRespBuilder;
-import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
@@ -282,7 +281,7 @@ public class OCSPTest
         DigestCalculatorProvider digCalcProv = new JcaDigestCalculatorProviderBuilder().setProvider(BC).build();
 
         String origDN = "CN=Eric H. Echidna, E=eric@bouncycastle.org, O=Bouncy Castle, C=AU";
-        GeneralName origName = new GeneralName(new X509Name(origDN));
+        GeneralName origName = new GeneralName(new X500Name(origDN));
 
         //
         // general id value for our test issuer cert and a serial number.
@@ -323,7 +322,7 @@ public class OCSPTest
 
         gen = new OCSPReqBuilder();
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         gen.addRequest(
             new CertificateID(digCalcProv.get(CertificateID.HASH_SHA1), testCert, BigInteger.valueOf(1)));
@@ -387,7 +386,7 @@ public class OCSPTest
 
         rand.nextBytes(sampleNonce);
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         ExtensionsGenerator extGen = new ExtensionsGenerator();
 
@@ -472,7 +471,7 @@ public class OCSPTest
         DigestCalculatorProvider digCalcProv = new JcaDigestCalculatorProviderBuilder().setProvider(BC).build();
 
         String origDN = "CN=Eric H. Echidna, E=eric@bouncycastle.org, O=Bouncy Castle, C=AU";
-        GeneralName origName = new GeneralName(new X509Name(origDN));
+        GeneralName origName = new GeneralName(new X500Name(origDN));
 
         //
         // general id value for our test issuer cert and a serial number.
@@ -515,7 +514,7 @@ public class OCSPTest
 
         gen = new OCSPReqBuilder();
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         gen.addRequest(
             new CertificateID(digCalcProv.get(CertificateID.HASH_SHA1), testCert, BigInteger.valueOf(1)));
@@ -577,7 +576,7 @@ public class OCSPTest
 
         rand.nextBytes(sampleNonce);
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         ExtensionsGenerator extGen = new ExtensionsGenerator();
 
@@ -702,7 +701,7 @@ public class OCSPTest
         X509CertificateHolder testCert = new JcaX509CertificateHolder(OCSPTestUtil.makeCertificate(signKP, signDN, signKP, signDN));
 
         String origDN = "CN=Eric H. Echidna, E=eric@bouncycastle.org, O=Bouncy Castle, C=AU";
-        GeneralName origName = new GeneralName(new X509Name(origDN));
+        GeneralName origName = new GeneralName(new X500Name(origDN));
         DigestCalculatorProvider digCalcProv = new JcaDigestCalculatorProviderBuilder().setProvider(BC).build();
 
         //
@@ -746,7 +745,7 @@ public class OCSPTest
 
         gen = new OCSPReqBuilder();
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         gen.addRequest(
             new CertificateID(digCalcProv.get(CertificateID.HASH_SHA1), testCert, BigInteger.valueOf(1)));
@@ -810,7 +809,7 @@ public class OCSPTest
 
         rand.nextBytes(sampleNonce);
 
-        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X509Principal("CN=fred")));
+        gen.setRequestorName(new GeneralName(GeneralName.directoryName, new X500Name("CN=fred")));
 
         ExtensionsGenerator extGen = new ExtensionsGenerator();
 

@@ -21,6 +21,7 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.oiw.ElGamalParameter;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.RSAPublicKey;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
@@ -32,7 +33,6 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.IssuingDistributionPoint;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.RSAPublicKeyStructure;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.TBSCertList;
@@ -43,7 +43,6 @@ import org.bouncycastle.asn1.x509.V2TBSCertListGenerator;
 import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.util.Arrays;
@@ -102,7 +101,7 @@ public class GenerationTest
         gen.setSignature(new AlgorithmIdentifier(PKCSObjectIdentifiers.md5WithRSAEncryption, DERNull.INSTANCE));
 
         SubjectPublicKeyInfo    info = new SubjectPublicKeyInfo(new AlgorithmIdentifier(PKCSObjectIdentifiers.rsaEncryption, DERNull.INSTANCE),
-                                                     new RSAPublicKeyStructure(BigInteger.valueOf(1), BigInteger.valueOf(2)));
+                                                     new RSAPublicKey(BigInteger.valueOf(1), BigInteger.valueOf(2)));
 
         gen.setSubjectPublicKeyInfo(info);
 
@@ -256,7 +255,7 @@ public class GenerationTest
 
         order.addElement(X509Extension.subjectAlternativeName);
 
-        extensions.put(X509Extension.subjectAlternativeName, new X509Extension(true, new DEROctetString(new GeneralNames(new GeneralName(new X509Name("CN=AU,O=Bouncy Castle,OU=Test 2"))))));
+        extensions.put(X509Extension.subjectAlternativeName, new X509Extension(true, new DEROctetString(new GeneralNames(new GeneralName(new X500Name("CN=AU,O=Bouncy Castle,OU=Test 2"))))));
 
         X509Extensions  ex = new X509Extensions(order, extensions);
 
