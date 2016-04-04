@@ -78,13 +78,16 @@ ifneq ($(TARGET_BUILD_PDK),true)
     LOCAL_MODULE := bouncycastle-bcpkix-nojarjar
     LOCAL_MODULE_TAGS := optional
     LOCAL_SRC_FILES := $(all_bcpkix_src_files)
-    LOCAL_JAVA_LIBRARIES := bouncycastle-nojarjar
+    LOCAL_NO_STANDARD_LIBRARIES := true
+    LOCAL_JAVA_LIBRARIES := bouncycastle-nojarjar core-oj core-libart conscrypt
     include $(BUILD_STATIC_JAVA_LIBRARY)
 
     include $(CLEAR_VARS)
     LOCAL_MODULE := bouncycastle-bcpkix
     LOCAL_MODULE_TAGS := optional
     LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-bcpkix-nojarjar
+    LOCAL_JAVA_LIBRARIES := core-oj core-libart conscrypt
+    LOCAL_NO_STANDARD_LIBRARIES := true
     LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
     include $(BUILD_STATIC_JAVA_LIBRARY)
 
