@@ -96,9 +96,10 @@ ifneq ($(TARGET_BUILD_PDK),true)
     LOCAL_MODULE := bouncycastle-ocsp
     LOCAL_MODULE_TAGS := optional
     LOCAL_SRC_FILES := $(all_bc_ocsp_files)
-    LOCAL_JAVA_LIBRARIES := bouncycastle-nojarjar bouncycastle-bcpkix-nojarjar
+    LOCAL_JAVA_LIBRARIES := bouncycastle-nojarjar bouncycastle-bcpkix-nojarjar core-oj core-libart conscrypt
     LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
     LOCAL_JAVA_LANGUAGE_VERSION := 1.7
+    LOCAL_NO_STANDARD_LIBRARIES := true
     include $(BUILD_STATIC_JAVA_LIBRARY)
 endif # TARGET_BUILD_PDK != true
 
