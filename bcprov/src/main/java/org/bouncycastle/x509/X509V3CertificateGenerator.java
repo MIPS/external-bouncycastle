@@ -34,7 +34,12 @@ import org.bouncycastle.asn1.x509.V3TBSCertificateGenerator;
 import org.bouncycastle.asn1.x509.X509ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.X509Principal;
-import org.bouncycastle.jce.provider.X509CertificateObject;
+// BEGIN ANDROID-ADDED
+// See the definition of the jcaJceHelper field for details.
+import org.bouncycastle.jcajce.provider.asymmetric.x509.X509CertificateObject;
+import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+import org.bouncycastle.jcajce.util.JcaJceHelper;
+// END ANDROID-ADDED
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 
 /**
@@ -48,6 +53,12 @@ public class X509V3CertificateGenerator
     private AlgorithmIdentifier         sigAlgId;
     private String                      signatureAlgorithm;
     private X509ExtensionsGenerator     extGenerator;
+    // BEGIN ANDROID-ADDED
+    // Use org.bouncycastle.jcajce.provider.asymmetric.x509.X509CertificateObject
+    // instead of org.bouncycastle.jce.provider.X509CertificateObject.
+    // We need to pass one instance of JcaJceHelper in the constructor of the former class.
+    private final JcaJceHelper jcaJceHelper = new BCJcaJceHelper();
+    // END ANDROID-ADDED
 
     public X509V3CertificateGenerator()
     {
@@ -510,8 +521,12 @@ public class X509V3CertificateGenerator
         v.add(tbsCert);
         v.add(sigAlgId);
         v.add(new DERBitString(signature));
-
-        return new X509CertificateObject(Certificate.getInstance(new DERSequence(v)));
+        // BEGIN ANDROID-CHANGED
+        // Was: return new X509CertificateObject(Certificate.getInstance(new DERSequence(v)));
+        // We are using a different X509CertificateObject class than the original, see definition
+        // of the jcaJceHelper field for details.
+        return new X509CertificateObject(jcaJceHelper, Certificate.getInstance(new DERSequence(v)));
+        // END ANDROID-CHANGED
     }
 
     /**
