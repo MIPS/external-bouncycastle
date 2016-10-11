@@ -52,6 +52,12 @@ public interface PBE
     static final int        OPENSSL      = 3;
     static final int        PKCS5S1_UTF8 = 4;
     static final int        PKCS5S2_UTF8 = 5;
+    // BEGIN android-added
+    static final int        SHA224 = 6;
+    static final int        SHA384 = 7;
+    static final int        SHA512 = 8;
+    // END android-added
+
 
     /**
      * uses the appropriate mixer to generate the key and IV if necessary.
@@ -114,11 +120,24 @@ public interface PBE
                 //     generator = new PKCS5S2ParametersGenerator(new TigerDigest());
                 //     break;
                 // END android-removed
+                // BEGIN android-added
+                case SHA224:
+                    generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA224());
+                    break;
+                // END android-added
                 case SHA256:
                     // BEGIN android-changed
                     generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA256());
                     // END android-changed
                     break;
+                // BEGIN android-added
+                case SHA384:
+                    generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA384());
+                    break;
+                case SHA512:
+                    generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA512());
+                    break;
+                // END android-added
                 // BEGIN android-removed
                 // case GOST3411:
                 //     generator = new PKCS5S2ParametersGenerator(new GOST3411Digest());
@@ -155,11 +174,24 @@ public interface PBE
                 //     generator = new PKCS12ParametersGenerator(new TigerDigest());
                 //     break;
                 // END android-removed
+                // BEGIN android-added
+                case SHA224:
+                    generator = new PKCS12ParametersGenerator(AndroidDigestFactory.getSHA224());
+                    break;
+                // END android-added
                 case SHA256:
                     // BEGIN android-changed
                     generator = new PKCS12ParametersGenerator(AndroidDigestFactory.getSHA256());
                     // END android-changed
                     break;
+                // BEGIN android-added
+                case SHA384:
+                    generator = new PKCS12ParametersGenerator(AndroidDigestFactory.getSHA384());
+                    break;
+                case SHA512:
+                    generator = new PKCS12ParametersGenerator(AndroidDigestFactory.getSHA512());
+                    break;
+                // END android-added
                 // BEGIN android-removed
                 // case GOST3411:
                 //     generator = new PKCS12ParametersGenerator(new GOST3411Digest());
