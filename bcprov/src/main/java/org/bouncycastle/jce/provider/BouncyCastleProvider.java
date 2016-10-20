@@ -59,7 +59,9 @@ public final class BouncyCastleProvider extends Provider
 
     private static final String[] SYMMETRIC_GENERIC =
     {
-        "PBEPBKDF2", "PBEPKCS12"
+        // BEGIN android-changed
+        // Was: "PBEPBKDF2", "PBEPKCS12"
+        "PBEPBKDF2", "PBEPKCS12", "PBES2AlgorithmParameters"
     };
 
     private static final String[] SYMMETRIC_MACS =
