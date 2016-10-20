@@ -20,6 +20,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.interfaces.PBEKey;
 import javax.crypto.spec.IvParameterSpec;
+// BEGIN android-added
+import javax.crypto.spec.PBEKeySpec;
+// END android-added
 import javax.crypto.spec.PBEParameterSpec;
 // BEGIN android-removed
 // import javax.crypto.spec.RC2ParameterSpec;
@@ -638,6 +641,16 @@ public class BaseBlockCipher
             else if (params instanceof PBEParameterSpec)
             {
                 pbeSpec = (PBEParameterSpec)params;
+                // BEGIN android-added
+                // At this point, k.getParam() == null, so the key hasn't been generated. Recreate
+                // the BCPBEKey with specs from algorithm parameters as to generate the key.
+                k = new BCPBEKey(k.getAlgorithm(), k.getOID(), k.getType(), k.getDigest(),
+                        k.getKeySize(), k.getIvSize(),
+                        new PBEKeySpec(
+                                k.getPassword(), pbeSpec.getSalt(), pbeSpec.getIterationCount(),
+                                k.getKeySize()),
+                        null /* CipherParameters */);
+                // END android-added
                 param = PBE.Util.makePBEParameters(k, params, cipher.getUnderlyingCipher().getAlgorithmName());
             }
             else
