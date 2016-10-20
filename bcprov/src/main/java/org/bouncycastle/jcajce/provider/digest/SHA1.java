@@ -145,11 +145,14 @@ public class SHA1
         private int scheme;
         // BEGIN ANDROID-ADDED
         private int digest;
+        private int keySizeInBits;
+        private int ivSizeInBits;
         // END ANDROID-ADDED
 
         // BEGIN ANDROID-CHANGED
-        // Was: public static class BasePBKDF2WithHmacSHA1
-        private BasePBKDF2WithHmacSHA_Variant(String name, int scheme, int digest)
+        // Was: public BasePBKDF2WithHmacSHA1(String name, int scheme)
+        private BasePBKDF2WithHmacSHA_Variant(
+                String name, int scheme, int digest, int keySizeInBits, int ivSizeInBits)
         // END ANDROID-CHANGED
         {
             super(name, PKCSObjectIdentifiers.id_PBKDF2);
@@ -157,8 +160,16 @@ public class SHA1
             this.scheme = scheme;
             // BEGIN ANDROID-ADDED
             this.digest = digest;
-            // BEGIN ANDROID-ADDED
+            this.keySizeInBits = keySizeInBits;
+            this.ivSizeInBits = ivSizeInBits;
+            // END ANDROID-ADDED
         }
+
+        // BEGIN android-added
+        private BasePBKDF2WithHmacSHA_Variant(String name, int scheme, int digest) {
+            this(name, scheme, digest, 0, 0);
+        }
+        // END android-added
 
         protected SecretKey engineGenerateSecret(
             KeySpec keySpec)
@@ -167,6 +178,22 @@ public class SHA1
             if (keySpec instanceof PBEKeySpec)
             {
                 PBEKeySpec pbeSpec = (PBEKeySpec)keySpec;
+
+                // BEGIN ANDROID-ADDED
+                // Allow to specify a key using only the password. The key will be generated later
+                // when other parameters are known.
+                if (pbeSpec.getSalt() == null
+                        && pbeSpec.getIterationCount() == 0
+                        && pbeSpec.getKeyLength() == 0
+                        && pbeSpec.getPassword().length > 0
+                        && keySizeInBits != 0) {
+                    return new BCPBEKey(
+                            this.algName, this.algOid, scheme, digest, keySizeInBits, ivSizeInBits,
+                            pbeSpec,
+                            // cipherParameters, to be generated when the PBE parameters are known.
+                            null);
+                }
+                // END ANDROID-ADDED
 
                 if (pbeSpec.getSalt() == null)
                 {
@@ -296,6 +323,77 @@ public class SHA1
             super("PBKDF2WithHmacSHA512", PKCS5S2_UTF8);
         }
     }
+
+    public static class PBEWithHmacSHA1AndAES_128
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA1AndAES_128() {
+            super("PBEWithHmacSHA1AndAES_128", PKCS5S2_UTF8, SHA1, 128, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA224AndAES_128
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA224AndAES_128() {
+            super("PBEWithHmacSHA224AndAES_128", PKCS5S2_UTF8, SHA224, 128, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA256AndAES_128
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA256AndAES_128() {
+            super("PBEWithHmacSHA256AndAES_128", PKCS5S2_UTF8, SHA256, 128, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA384AndAES_128
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA384AndAES_128() {
+            super("PBEWithHmacSHA384AndAES_128", PKCS5S2_UTF8, SHA384, 128, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA512AndAES_128
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA512AndAES_128() {
+            super("PBEWithHmacSHA512AndAES_128", PKCS5S2_UTF8, SHA512, 128, 128);
+        }
+    }
+
+
+    public static class PBEWithHmacSHA1AndAES_256
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA1AndAES_256() {
+            super("PBEWithHmacSHA1AndAES_256", PKCS5S2_UTF8, SHA1, 256, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA224AndAES_256
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA224AndAES_256() {
+            super("PBEWithHmacSHA224AndAES_256", PKCS5S2_UTF8, SHA224, 256, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA256AndAES_256
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA256AndAES_256() {
+            super("PBEWithHmacSHA256AndAES_256", PKCS5S2_UTF8, SHA256, 256, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA384AndAES_256
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA384AndAES_256() {
+            super("PBEWithHmacSHA384AndAES_256", PKCS5S2_UTF8, SHA384, 256, 128);
+        }
+    }
+
+    public static class PBEWithHmacSHA512AndAES_256
+            extends BasePBKDF2WithHmacSHA_Variant {
+        public PBEWithHmacSHA512AndAES_256() {
+            super("PBEWithHmacSHA512AndAES_256", PKCS5S2_UTF8, SHA512, 256, 128);
+        }
+    }
     // END ANDROID-ADDED
 
 
@@ -338,6 +436,16 @@ public class SHA1
             provider.addAlgorithm("SecretKeyFactory.PBKDF2WithHmacSHA256", PREFIX + "$PBKDF2WithHmacSHA256UTF8");
             provider.addAlgorithm("SecretKeyFactory.PBKDF2WithHmacSHA384", PREFIX + "$PBKDF2WithHmacSHA384UTF8");
             provider.addAlgorithm("SecretKeyFactory.PBKDF2WithHmacSHA512", PREFIX + "$PBKDF2WithHmacSHA512UTF8");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA1AndAES_128", PREFIX + "$PBEWithHmacSHA1AndAES_128");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA224AndAES_128", PREFIX + "$PBEWithHmacSHA224AndAES_128");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA256AndAES_128", PREFIX + "$PBEWithHmacSHA256AndAES_128");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA384AndAES_128", PREFIX + "$PBEWithHmacSHA384AndAES_128");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA512AndAES_128", PREFIX + "$PBEWithHmacSHA512AndAES_128");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA1AndAES_256", PREFIX + "$PBEWithHmacSHA1AndAES_256");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA224AndAES_256", PREFIX + "$PBEWithHmacSHA224AndAES_256");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA256AndAES_256", PREFIX + "$PBEWithHmacSHA256AndAES_256");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA384AndAES_256", PREFIX + "$PBEWithHmacSHA384AndAES_256");
+            provider.addAlgorithm("SecretKeyFactory.PBEWithHmacSHA512AndAES_256", PREFIX + "$PBEWithHmacSHA512AndAES_256");
             // END android-added
             provider.addAlgorithm("Alg.Alias.SecretKeyFactory.PBKDF2WithHmacSHA1AndUTF8", "PBKDF2WithHmacSHA1");
             provider.addAlgorithm("SecretKeyFactory.PBKDF2WithHmacSHA1And8BIT", PREFIX + "$PBKDF2WithHmacSHA18BIT");

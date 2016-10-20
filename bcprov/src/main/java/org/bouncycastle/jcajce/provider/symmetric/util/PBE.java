@@ -1,9 +1,13 @@
 package org.bouncycastle.jcajce.provider.symmetric.util;
 
+import java.lang.reflect.Method;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.SecretKey;
+// BEGIN android-added
+import javax.crypto.spec.IvParameterSpec;
+// END android-added
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
@@ -243,6 +247,21 @@ public interface PBE
             if (ivSize != 0)
             {
                 param = generator.generateDerivedParameters(keySize, ivSize);
+                // BEGIN ANDROID-ADDED
+                // PKCS5S2 doesn't specify that the IV must be generated from the password. If the
+                // IV is passed as a parameter, use it.
+                AlgorithmParameterSpec parameterSpecFromPBEParameterSpec =
+                        getParameterSpecFromPBEParameterSpec(pbeParam);
+                if ((scheme == PKCS5S2 || scheme == PKCS5S2_UTF8)
+                        && parameterSpecFromPBEParameterSpec instanceof IvParameterSpec) {
+                    ParametersWithIV parametersWithIV = (ParametersWithIV) param;
+                    IvParameterSpec ivParameterSpec =
+                            (IvParameterSpec) parameterSpecFromPBEParameterSpec;
+                    param = new ParametersWithIV(
+                            (KeyParameter) parametersWithIV.getParameters(),
+                            ivParameterSpec.getIV());
+                }
+                // END ANDROID-ADDED
             }
             else
             {
@@ -302,6 +321,21 @@ public interface PBE
             if (pbeKey.getIvSize() != 0)
             {
                 param = generator.generateDerivedParameters(pbeKey.getKeySize(), pbeKey.getIvSize());
+                // BEGIN ANDROID-ADDED
+                // PKCS5S2 doesn't specify that the IV must be generated from the password. If the
+                // IV is passed as a parameter, use it.
+                AlgorithmParameterSpec parameterSpecFromPBEParameterSpec =
+                        getParameterSpecFromPBEParameterSpec(pbeParam);
+                if ((pbeKey.getType() == PKCS5S2 || pbeKey.getType() == PKCS5S2_UTF8)
+                        && parameterSpecFromPBEParameterSpec instanceof IvParameterSpec) {
+                    ParametersWithIV parametersWithIV = (ParametersWithIV) param;
+                    IvParameterSpec ivParameterSpec =
+                            (IvParameterSpec) parameterSpecFromPBEParameterSpec;
+                    param = new ParametersWithIV(
+                            (KeyParameter) parametersWithIV.getParameters(),
+                            ivParameterSpec.getIV());
+                }
+                // END ANDROID-ADDED
             }
             else
             {
@@ -456,6 +490,28 @@ public interface PBE
     
             return param;
         }
+
+        // BEGIN android-added
+        /**
+         * Invokes the method {@link PBEParameterSpec#getParameterSpec()} via reflection.
+         *
+         * Needed as the method was introduced in Java 1.8 and Bouncycastle level is 1.5.
+         *
+         * @return the parameter spec, or null if the method is not available.
+         */
+        public static AlgorithmParameterSpec getParameterSpecFromPBEParameterSpec(
+                PBEParameterSpec pbeParameterSpec) {
+            try {
+                Method getParameterSpecMethod = PBE.class.getClassLoader()
+                        .loadClass("javax.crypto.spec.PBEParameterSpec")
+                        .getMethod("getParameterSpec");
+                return (AlgorithmParameterSpec) getParameterSpecMethod.invoke(pbeParameterSpec);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        // END android-added
+
 
         private static byte[] convertPassword(int type, PBEKeySpec keySpec)
         {
