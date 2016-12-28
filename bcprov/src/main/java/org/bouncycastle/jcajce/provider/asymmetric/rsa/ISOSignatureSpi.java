@@ -23,6 +23,7 @@ import org.bouncycastle.crypto.digests.SHA512tDigest;
 import org.bouncycastle.crypto.digests.WhirlpoolDigest;
 import org.bouncycastle.crypto.engines.RSABlindedEngine;
 import org.bouncycastle.crypto.signers.ISO9796d2Signer;
+import org.bouncycastle.crypto.util.DigestFactory;
 
 public class ISOSignatureSpi
     extends SignatureSpi
@@ -124,7 +125,7 @@ public class ISOSignatureSpi
     {
         public SHA1WithRSAEncryption()
         {
-            super(new SHA1Digest(), new RSABlindedEngine());
+            super(DigestFactory.createSHA1(), new RSABlindedEngine());
         }
     }
 
@@ -133,7 +134,7 @@ public class ISOSignatureSpi
     {
         public MD5WithRSAEncryption()
         {
-            super(new MD5Digest(), new RSABlindedEngine());
+            super(DigestFactory.createMD5(), new RSABlindedEngine());
         }
     }
 
@@ -151,7 +152,7 @@ public class ISOSignatureSpi
     {
         public SHA224WithRSAEncryption()
         {
-            super(new SHA224Digest(), new RSABlindedEngine());
+            super(DigestFactory.createSHA224(), new RSABlindedEngine());
         }
     }
 
@@ -160,7 +161,7 @@ public class ISOSignatureSpi
     {
         public SHA256WithRSAEncryption()
         {
-            super(new SHA256Digest(), new RSABlindedEngine());
+            super(DigestFactory.createSHA256(), new RSABlindedEngine());
         }
     }
 
@@ -169,7 +170,7 @@ public class ISOSignatureSpi
     {
         public SHA384WithRSAEncryption()
         {
-            super(new SHA384Digest(), new RSABlindedEngine());
+            super(DigestFactory.createSHA384(), new RSABlindedEngine());
         }
     }
 
@@ -178,7 +179,7 @@ public class ISOSignatureSpi
     {
         public SHA512WithRSAEncryption()
         {
-            super(new SHA512Digest(), new RSABlindedEngine());
+            super(DigestFactory.createSHA512(), new RSABlindedEngine());
         }
     }
 
@@ -187,7 +188,7 @@ public class ISOSignatureSpi
     {
         public SHA512_224WithRSAEncryption()
         {
-            super(new SHA512tDigest(224), new RSABlindedEngine());
+            super(DigestFactory.createSHA512_224(), new RSABlindedEngine());
         }
     }
 
@@ -196,7 +197,7 @@ public class ISOSignatureSpi
     {
         public SHA512_256WithRSAEncryption()
         {
-            super(new SHA512tDigest(256), new RSABlindedEngine());
+            super(DigestFactory.createSHA512_256(), new RSABlindedEngine());
         }
     }
 
