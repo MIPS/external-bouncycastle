@@ -13,18 +13,15 @@ import javax.crypto.spec.PBEParameterSpec;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.PBEParametersGenerator;
-// BEGIN android-removed
-// import org.bouncycastle.crypto.digests.GOST3411Digest;
-// import org.bouncycastle.crypto.digests.MD2Digest;
-// import org.bouncycastle.crypto.digests.MD5Digest;
-// import org.bouncycastle.crypto.digests.RIPEMD160Digest;
-// import org.bouncycastle.crypto.digests.SHA1Digest;
-// import org.bouncycastle.crypto.digests.SHA256Digest;
-// import org.bouncycastle.crypto.digests.TigerDigest;
-// END android-removed
 // BEGIN android-added
 import org.bouncycastle.crypto.digests.AndroidDigestFactory;
 // END android-added
+// BEGIN android-removed
+// import org.bouncycastle.crypto.digests.GOST3411Digest;
+// import org.bouncycastle.crypto.digests.MD2Digest;
+// import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+// import org.bouncycastle.crypto.digests.TigerDigest;
+// END android-removed
 import org.bouncycastle.crypto.generators.OpenSSLPBEParametersGenerator;
 import org.bouncycastle.crypto.generators.PKCS12ParametersGenerator;
 import org.bouncycastle.crypto.generators.PKCS5S1ParametersGenerator;
@@ -32,6 +29,9 @@ import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.bouncycastle.crypto.params.DESParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+// BEGIN android-removed
+// import org.bouncycastle.crypto.util.DigestFactory;
+// END android-removed
 
 public interface PBE
 {
@@ -49,6 +49,9 @@ public interface PBE
     // static final int        MD2          = 5;
     // static final int        GOST3411     = 6;
     // END android-removed
+    static final int        SHA224       = 7;
+    static final int        SHA384       = 8;
+    static final int        SHA512       = 9;
 
     static final int        PKCS5S1      = 0;
     static final int        PKCS5S2      = 1;
@@ -56,11 +59,6 @@ public interface PBE
     static final int        OPENSSL      = 3;
     static final int        PKCS5S1_UTF8 = 4;
     static final int        PKCS5S2_UTF8 = 5;
-    // BEGIN android-added
-    static final int        SHA224 = 6;
-    static final int        SHA384 = 7;
-    static final int        SHA512 = 8;
-    // END android-added
 
 
     /**
@@ -111,6 +109,7 @@ public interface PBE
                     generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getMD5());
                     // END android-changed
                     break;
+
                 case SHA1:
                     // BEGIN android-changed
                     generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA1());
@@ -142,11 +141,6 @@ public interface PBE
                     generator = new PKCS5S2ParametersGenerator(AndroidDigestFactory.getSHA512());
                     break;
                 // END android-added
-                // BEGIN android-removed
-                // case GOST3411:
-                //     generator = new PKCS5S2ParametersGenerator(new GOST3411Digest());
-                //     break;
-                // END android-removed
                 default:
                     throw new IllegalStateException("unknown digest scheme for PBE PKCS5S2 encryption.");
                 }
@@ -195,12 +189,6 @@ public interface PBE
                 case SHA512:
                     generator = new PKCS12ParametersGenerator(AndroidDigestFactory.getSHA512());
                     break;
-                // END android-added
-                // BEGIN android-removed
-                // case GOST3411:
-                //     generator = new PKCS12ParametersGenerator(new GOST3411Digest());
-                //     break;
-                // END android-removed
                 default:
                     throw new IllegalStateException("unknown digest scheme for PBE encryption.");
                 }
@@ -284,11 +272,6 @@ public interface PBE
                 }
             }
 
-            for (int i = 0; i != key.length; i++)
-            {
-                key[i] = 0;
-            }
-
             return param;
         }
 
@@ -358,11 +341,6 @@ public interface PBE
                 }
             }
 
-            for (int i = 0; i != key.length; i++)
-            {
-                key[i] = 0;
-            }
-
             return param;
         }
 
@@ -388,11 +366,6 @@ public interface PBE
             generator.init(key, pbeParam.getSalt(), pbeParam.getIterationCount());
 
             param = generator.generateDerivedMacParameters(pbeKey.getKeySize());
-    
-            for (int i = 0; i != key.length; i++)
-            {
-                key[i] = 0;
-            }
 
             return param;
         }
