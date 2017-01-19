@@ -68,11 +68,7 @@ import org.bouncycastle.util.Integers;
 import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Hex;
 
-// BEGIN ANDROID-CHANGED
-// Was: class X509CertificateObject
-// Changed to public so that it can be accessed from X509V3CertificateGenerator
-public class X509CertificateObject
-// END ANDROID-CHANGED
+class X509CertificateObject
     extends X509Certificate
     implements PKCS12BagAttributeCarrier
 {

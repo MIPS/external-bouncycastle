@@ -44,7 +44,7 @@ import org.bouncycastle.jcajce.provider.util.AsymmetricKeyInfoConverter;
 public final class BouncyCastleProvider extends Provider
     implements ConfigurableProvider
 {
-    private static String info = "BouncyCastle Security Provider v1.54";
+    private static String info = "BouncyCastle Security Provider v1.56";
 
     public static final String PROVIDER_NAME = "BC";
 
@@ -60,14 +60,14 @@ public final class BouncyCastleProvider extends Provider
     private static final String[] SYMMETRIC_GENERIC =
     {
         // BEGIN android-changed
-        // Was: "PBEPBKDF2", "PBEPKCS12"
+        // Was: "PBEPBKDF2", "TLSKDF"
         "PBEPBKDF2", "PBEPKCS12", "PBES2AlgorithmParameters"
     };
 
     private static final String[] SYMMETRIC_MACS =
     {
         // BEGIN android-removed
-        // "SipHash"
+        // "SipHash", "Poly1305"
         // END android-removed
     };
 
@@ -132,8 +132,18 @@ public final class BouncyCastleProvider extends Provider
     private static final String KEYSTORE_PACKAGE = "org.bouncycastle.jcajce.provider.keystore.";
     private static final String[] KEYSTORES =
     {
-        "BC", "PKCS12"
+        "BC", "BCFKS", "PKCS12"
     };
+
+    // BEGIN android-removed
+    // /*
+    //  * Configurable secure random
+    //  */
+    // private static final String SECURE_RANDOM_PACKAGE = "org.bouncycastle.jcajce.provider.drbg.";
+    // private static final String[] SECURE_RANDOMS =
+    // {
+    //     "DRBG"
+    // };
 
     /**
      * Construct a new provider.  This should only be required when
@@ -142,7 +152,7 @@ public final class BouncyCastleProvider extends Provider
      */
     public BouncyCastleProvider()
     {
-        super(PROVIDER_NAME, 1.54, info);
+        super(PROVIDER_NAME, 1.56, info);
 
         AccessController.doPrivileged(new PrivilegedAction()
         {
@@ -171,6 +181,8 @@ public final class BouncyCastleProvider extends Provider
         loadAlgorithms(KEYSTORE_PACKAGE, KEYSTORES);
 
         // BEGIN android-removed
+        // loadAlgorithms(SECURE_RANDOM_PACKAGE, SECURE_RANDOMS);
+        //
         // //
         // // X509Store
         // //
@@ -287,13 +299,24 @@ public final class BouncyCastleProvider extends Provider
 
     public void addKeyInfoConverter(ASN1ObjectIdentifier oid, AsymmetricKeyInfoConverter keyInfoConverter)
     {
-        keyInfoConverters.put(oid, keyInfoConverter);
+        synchronized (keyInfoConverters)
+        {
+            keyInfoConverters.put(oid, keyInfoConverter);
+        }
+    }
+
+    private static AsymmetricKeyInfoConverter getAsymmetricKeyInfoConverter(ASN1ObjectIdentifier algorithm)
+    {
+        synchronized (keyInfoConverters)
+        {
+            return (AsymmetricKeyInfoConverter)keyInfoConverters.get(algorithm);
+        }
     }
 
     public static PublicKey getPublicKey(SubjectPublicKeyInfo publicKeyInfo)
         throws IOException
     {
-        AsymmetricKeyInfoConverter converter = (AsymmetricKeyInfoConverter)keyInfoConverters.get(publicKeyInfo.getAlgorithm().getAlgorithm());
+        AsymmetricKeyInfoConverter converter = getAsymmetricKeyInfoConverter(publicKeyInfo.getAlgorithm().getAlgorithm());
 
         if (converter == null)
         {
@@ -306,7 +329,7 @@ public final class BouncyCastleProvider extends Provider
     public static PrivateKey getPrivateKey(PrivateKeyInfo privateKeyInfo)
         throws IOException
     {
-        AsymmetricKeyInfoConverter converter = (AsymmetricKeyInfoConverter)keyInfoConverters.get(privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm());
+        AsymmetricKeyInfoConverter converter = getAsymmetricKeyInfoConverter(privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm());
 
         if (converter == null)
         {
