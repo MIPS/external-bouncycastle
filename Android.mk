@@ -152,7 +152,7 @@ ifneq ($(TARGET_BUILD_PDK),true)
     LOCAL_MODULE_TAGS := optional
     LOCAL_SRC_FILES := $(all_bcprov_src_files)
     LOCAL_JAVA_LIBRARIES := conscrypt-hostdex
-    include $(BUILD_HOST_DALVIK_JAVA_LIBRARY)
+    include $(BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY)
 
     include $(CLEAR_VARS)
     LOCAL_MODULE := bouncycastle-hostdex
@@ -167,25 +167,25 @@ ifneq ($(TARGET_BUILD_PDK),true)
     LOCAL_MODULE := bouncycastle-bcpkix-hostdex-nojarjar
     LOCAL_MODULE_TAGS := optional
     LOCAL_SRC_FILES := $(all_bcpkix_src_files)
-    LOCAL_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar
-    include $(BUILD_HOST_DALVIK_JAVA_LIBRARY)
+    LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar
+    include $(BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY)
 
     include $(CLEAR_VARS)
     LOCAL_MODULE := bouncycastle-bcpkix-hostdex
     LOCAL_MODULE_TAGS := optional
     LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-bcpkix-hostdex-nojarjar
-    LOCAL_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar
+    LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar
     LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
-    include $(BUILD_HOST_DALVIK_JAVA_LIBRARY)
+    include $(BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY)
 
     # OCSP classes used for testing
     include $(CLEAR_VARS)
     LOCAL_MODULE := bouncycastle-ocsp-hostdex
     LOCAL_MODULE_TAGS := optional
     LOCAL_SRC_FILES := $(all_bc_ocsp_files)
-    LOCAL_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar bouncycastle-bcpkix-hostdex-nojarjar
+    LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-hostdex-nojarjar bouncycastle-bcpkix-hostdex-nojarjar
     LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
-    include $(BUILD_HOST_DALVIK_JAVA_LIBRARY)
+    include $(BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY)
   endif  # ($(HOST_OS),linux)
 endif
 
