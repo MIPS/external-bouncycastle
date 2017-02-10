@@ -28,9 +28,7 @@ public class EC
 
         public void configure(ConfigurableProvider provider)
         {
-            // BEGIN android-removed
-            // provider.addAlgorithm("AlgorithmParameters.EC", PREFIX + "AlgorithmParametersSpi");
-            // END android-removed
+            provider.addAlgorithm("AlgorithmParameters.EC", PREFIX + "AlgorithmParametersSpi");
 
             provider.addAlgorithm("KeyAgreement.ECDH", PREFIX + "KeyAgreementSpi$DH");
             // BEGIN android-removed
