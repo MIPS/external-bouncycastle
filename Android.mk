@@ -65,6 +65,19 @@ ifneq ($(TARGET_BUILD_PDK),true)
     LOCAL_JAVA_LANGUAGE_VERSION := 1.7
     include $(BUILD_JAVA_LIBRARY)
 
+    # A guaranteed unstripped version of bouncycastle.
+    # The build system may or may not strip the bouncycastle jar, but this one will
+    # not be stripped. See b/24535627.
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := bouncycastle-testdex
+    LOCAL_MODULE_TAGS := optional
+    LOCAL_STATIC_JAVA_LIBRARIES := bouncycastle-nojarjar
+    LOCAL_JAVA_LIBRARIES := core-oj core-libart conscrypt
+    LOCAL_NO_STANDARD_LIBRARIES := true
+    LOCAL_JARJAR_RULES := $(LOCAL_PATH)/jarjar-rules.txt
+    LOCAL_JAVA_LANGUAGE_VERSION := 1.7
+    include $(BUILD_JAVA_LIBRARY)
+
     # unbundled bouncycastle jar
     include $(CLEAR_VARS)
     LOCAL_MODULE := bouncycastle-unbundled
