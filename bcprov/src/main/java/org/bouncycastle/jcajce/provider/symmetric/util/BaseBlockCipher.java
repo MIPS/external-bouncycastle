@@ -642,14 +642,17 @@ public class BaseBlockCipher
             {
                 pbeSpec = (PBEParameterSpec)params;
                 // BEGIN android-added
-                // At this point, k.getParam() == null, so the key hasn't been generated. Recreate
-                // the BCPBEKey with specs from algorithm parameters as to generate the key.
-                k = new BCPBEKey(k.getAlgorithm(), k.getOID(), k.getType(), k.getDigest(),
-                        k.getKeySize(), k.getIvSize(),
-                        new PBEKeySpec(
-                                k.getPassword(), pbeSpec.getSalt(), pbeSpec.getIterationCount(),
-                                k.getKeySize()),
-                        null /* CipherParameters */);
+                // At this point, k.getParam() == null, so the key hasn't been generated.  If
+                // the parameters have non-default values, recreate the BCPBEKey from algorithm
+                // parameters as to generate the key.
+                if ((pbeSpec.getSalt().length != 0) && (pbeSpec.getIterationCount() > 0)) {
+                    k = new BCPBEKey(k.getAlgorithm(), k.getOID(), k.getType(), k.getDigest(),
+                            k.getKeySize(), k.getIvSize(),
+                            new PBEKeySpec(
+                                    k.getPassword(), pbeSpec.getSalt(), pbeSpec.getIterationCount(),
+                                    k.getKeySize()),
+                            null /* CipherParameters */);
+                }
                 // END android-added
                 param = PBE.Util.makePBEParameters(k, params, cipher.getUnderlyingCipher().getAlgorithmName());
             }
