@@ -7,6 +7,7 @@ import java.security.PrivilegedAction;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -21,7 +22,7 @@ public class BouncyCastlePQCProvider
     extends Provider
     implements ConfigurableProvider
 {
-    private static String info = "BouncyCastle Post-Quantum Security Provider v1.56";
+    private static String info = "BouncyCastle Post-Quantum Security Provider v1.57";
 
     public static String PROVIDER_NAME = "BCPQC";
 
@@ -46,7 +47,7 @@ public class BouncyCastlePQCProvider
      */
     public BouncyCastlePQCProvider()
     {
-        super(PROVIDER_NAME, 1.56, info);
+        super(PROVIDER_NAME, 1.57, info);
 
         AccessController.doPrivileged(new PrivilegedAction()
         {
@@ -140,6 +141,21 @@ public class BouncyCastlePQCProvider
         synchronized (keyInfoConverters)
         {
             keyInfoConverters.put(oid, keyInfoConverter);
+        }
+    }
+
+    public void addAttributes(String key, Map<String, String> attributeMap)
+    {
+        for (Iterator it = attributeMap.keySet().iterator(); it.hasNext();)
+        {
+            String attributeName = (String)it.next();
+            String attributeKey = key + " " + attributeName;
+            if (containsKey(attributeKey))
+            {
+                throw new IllegalStateException("duplicate provider attribute key (" + attributeKey + ") found");
+            }
+
+            put(attributeKey, attributeMap.get(attributeName));
         }
     }
 

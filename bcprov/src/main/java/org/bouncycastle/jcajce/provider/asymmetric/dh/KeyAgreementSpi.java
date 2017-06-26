@@ -17,7 +17,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.DerivationFunction;
 import org.bouncycastle.crypto.agreement.kdf.DHKEKGenerator;
-import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.util.DigestFactory;
 import org.bouncycastle.jcajce.provider.asymmetric.util.BaseAgreementSpi;
 import org.bouncycastle.jcajce.spec.UserKeyingMaterialSpec;

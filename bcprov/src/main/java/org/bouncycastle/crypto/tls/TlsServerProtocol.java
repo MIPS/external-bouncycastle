@@ -121,11 +121,9 @@ public class TlsServerProtocol
         return tlsServer;
     }
 
-    protected void handleHandshakeMessage(short type, byte[] data)
+    protected void handleHandshakeMessage(short type, ByteArrayInputStream buf)
         throws IOException
     {
-        ByteArrayInputStream buf = new ByteArrayInputStream(data);
-
         switch (type)
         {
         case HandshakeType.client_hello:
@@ -373,7 +371,6 @@ public class TlsServerProtocol
 
                 sendFinishedMessage();
                 this.connection_state = CS_SERVER_FINISHED;
-                this.connection_state = CS_END;
 
                 completeHandshake();
                 break;
@@ -654,10 +651,19 @@ public class TlsServerProtocol
 
         assertEmpty(buf);
 
+        if (TlsUtils.isSSL(getContext()))
+        {
+            establishMasterSecret(getContext(), keyExchange);
+        }
+
         this.prepareFinishHash = recordStream.prepareToFinish();
         this.securityParameters.sessionHash = getCurrentPRFHash(getContext(), prepareFinishHash, null);
 
-        establishMasterSecret(getContext(), keyExchange);
+        if (!TlsUtils.isSSL(getContext()))
+        {
+            establishMasterSecret(getContext(), keyExchange);
+        }
+
         recordStream.setPendingConnectionState(getPeer().getCompression(), getPeer().getCipher());
 
         if (!expectSessionTicket)
@@ -817,7 +823,7 @@ public class TlsServerProtocol
         securityParameters.prfAlgorithm = getPRFAlgorithm(getContext(), securityParameters.getCipherSuite());
 
         /*
-         * RFC 5264 7.4.9. Any cipher suite which does not explicitly specify verify_data_length has
+         * RFC 5246 7.4.9. Any cipher suite which does not explicitly specify verify_data_length has
          * a verify_data_length equal to 12. This includes all existing cipher suites.
          */
         securityParameters.verifyDataLength = 12;
