@@ -1144,6 +1144,119 @@ public class CertTest
             "flc9nF9Ca/UHLbXwgpP5WW+uZPpY5Yse42O+tYHNbwKMeQ==\n" +
             "-----END CERTIFICATE-----";
 
+    private final String pemPKCS7 =
+        "-----BEGIN PKCS7-----\n"+
+        "MIIJDAYJKoZIhvcNAQcCoIII/TCCCPkCAQExADALBgkqhkiG9w0BBwGgggjfMIIF\n"+
+        "wTCCBKmgAwIBAgIJ+pQ4odKc8AABMA0GCSqGSIb3DQEBBQUAMGAxCzAJBgNVBAYT\n"+
+        "AlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRIwEAYDVQQHEwlTYW4gTWF0ZW8xFzAV\n"+
+        "BgNVBAoTDkdlbml1cy5jb20gSW5jMQ8wDQYDVQQLEwZOZXRPcHMwHhcNMTQwMTI4\n"+
+        "MjE0MjE0WhcNMjQwMTI2MjE0MjE0WjBgMQswCQYDVQQGEwJVUzETMBEGA1UECBMK\n"+
+        "Q2FsaWZvcm5pYTESMBAGA1UEBxMJU2FuIE1hdGVvMRcwFQYDVQQKEw5HZW5pdXMu\n"+
+        "Y29tIEluYzEPMA0GA1UECxMGTmV0T3BzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A\n"+
+        "MIIBCgKCAQEArfmkkDffJP6ODl13KnTaB8cwvB4anWw8+bGa8y9N7wPx7RWZWFMr\n"+
+        "fOac01p2fhq+oUIw3/uxRcDAQBQx0ZFLx3OFMuQkTpFbzHeSctsXi1Kk28pn4K3B\n"+
+        "K2CModRh8ir/qdhu0PG4SsXdyN8uT8H6bitmH4vpLaAMMi6aa1M6Ygio8a37UCQQ\n"+
+        "7fw2P7YVR61BsyqwsM/eYtgd2LqrObLwkkOvxTwpZPWDftHI4ucz1rgNnD9q0H3g\n"+
+        "kyGyGq9NBkBHJ25+CkMe+1q/eh4Xt2kt2ML4q5YZmQEwHm1eIR3/uGlb1+bueRMd\n"+
+        "hrueth/FsUiKPJ0gzmsxzQefgcLnctIx3wIDAQABo4ICfDCCAngwCQYDVR0TBAIw\n"+
+        "ADALBgNVHQ8EBAMCBeAwHQYDVR0OBBYEFJ/uU/wudzNDSI/SWkNNTXNLq2EIMIGS\n"+
+        "BgNVHSMEgYowgYeAFJ/uU/wudzNDSI/SWkNNTXNLq2EIoWSkYjBgMQswCQYDVQQG\n"+
+        "EwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTESMBAGA1UEBxMJU2FuIE1hdGVvMRcw\n"+
+        "FQYDVQQKEw5HZW5pdXMuY29tIEluYzEPMA0GA1UECxMGTmV0T3Bzggn6lDih0pzw\n"+
+        "AAEwHgYJYIZIAYb4QgENBBEWD1guNTA5IFVuaXQgVGVzdDCBwwYDVR0RBIG7MIG4\n"+
+        "oA4GAyoDBKAHDAV0ZXN0MYEQeDUwOUBleGFtcGxlLmNvbYIQeDUwOS5leGFtcGxl\n"+
+        "LmNvbaRQME4xCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1Bd2Vzb21lIER1ZGVzMRcw\n"+
+        "FQYDVQQLFA7DnGJlciBGcsOuZW5kczEOMAwGA1UEAxQF4oiGxpKGJWh0dHA6Ly93\n"+
+        "d3cuZXhhbXBsZS5jb20vP3E9YXdlc29tZW5lc3OHBMCoAAGIAyoDBDCBwwYDVR0S\n"+
+        "BIG7MIG4oA4GAyoDBKAHDAV0ZXN0MYEQeDUwOUBleGFtcGxlLmNvbYIQeDUwOS5l\n"+
+        "eGFtcGxlLmNvbaRQME4xCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1Bd2Vzb21lIER1\n"+
+        "ZGVzMRcwFQYDVQQLFA7DnGJlciBGcsOuZW5kczEOMAwGA1UEAxQF4oiGxpKGJWh0\n"+
+        "dHA6Ly93d3cuZXhhbXBsZS5jb20vP3E9YXdlc29tZW5lc3OHBMCoAAGIAyoDBDAN\n"+
+        "BgkqhkiG9w0BAQUFAAOCAQEAQK5jBzTq2lX1GpVD9RHxtTHJn/WkYOpMJYJruw8j\n"+
+        "HGfQwAkhlL9AqWgodTruoTnXgZbA7F3S8hx9gmUbHVjVeBvxZnGEJ8g7So1erFKv\n"+
+        "yQD1Ajtn7+uGXw6s0Dvde2ZVzV05pRk9ybg7kxKNXvVbKS3kyd6XoA27H5CSmzDu\n"+
+        "8cwHQkN4mJlwAiNCwMarpN4m4X0rQ+g1Ncfq+4sRjFLd8VVCbCpzD8UMBOVTpxxj\n"+
+        "kSyRPJZ7Db8SY0H2vcTUj2Yyog1RQ+RA/xp7Fgw+leEiveIE23Dq62hCHq6rU5Vj\n"+
+        "6L/LlLiKZ17lZT4z0fJ0lukPUpmVTynALKsKNm57+fOfnzCCAxYwggLWoAMCAQIC\n"+
+        "CQDcaK5WyhbztjAJBgcqhkjOOAQDMGAxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpD\n"+
+        "YWxpZm9ybmlhMRIwEAYDVQQHEwlTYW4gTWF0ZW8xFzAVBgNVBAoTDkdlbml1cy5j\n"+
+        "b20gSW5jMQ8wDQYDVQQLEwZOZXRPcHMwHhcNMTQwMTI4MjE0MjE1WhcNMTQwMjI3\n"+
+        "MjE0MjE1WjBgMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTESMBAG\n"+
+        "A1UEBxMJU2FuIE1hdGVvMRcwFQYDVQQKEw5HZW5pdXMuY29tIEluYzEPMA0GA1UE\n"+
+        "CxMGTmV0T3BzMIIBtzCCASsGByqGSM44BAEwggEeAoGBAIiv42coWuyVXpYoyEwf\n"+
+        "7uevd4ILhylFuvKH5tRWRcZENuxPOmXfr3L43PCdbnJhXMg3RkkWgjaE7lBk5evx\n"+
+        "LKH6rU2a1GnGmoY34OIvVvGL3xi96uYTTvLIX3+6NXaAlNppIBSHXcYx8cMdtYIn\n"+
+        "3J6JGSHEPo36ay4rDZbfS1frAhUAxF6k+/9T00QMolE41R+6ytzrawkCgYA4soyt\n"+
+        "rrIrQq6gwm2HanT8coIChr3/Et8rMamj7gS1yT9kH8HNGf217XtE3f/LUZZWUkBq\n"+
+        "3PNOuxhprNmvSAdQ7ZzhWfRvOFHKaH/DtKvLeEC5I00DfYSI64/V869Jy7lnyY7M\n"+
+        "h7ShLIwOlwnBDIL5oluircfXTr20a/Jv9pS1AAOBhQACgYEAhg6lELBZAIHVkjm7\n"+
+        "bwVJ5G/ka+KCjXxWXo+BCbqo0LqfrKQoQwUcwDzuKdqWxYbyUd0cl5/9fX59/RT/\n"+
+        "9ULklGy+dTyUSc/hj85PCXLYly3G6WECiN29TK0QLhEMZfi+iSm3YxNX3rxvmrHb\n"+
+        "bfO2SMef4r6ujv9KscDg0zQ4AgajGjAYMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgA3\n"+
+        "MAkGByqGSM44BAMDLwAwLAIUVcYZ1LNv22fDBiajZ99FpTn05SMCFCgMXzUGLdPy\n"+
+        "gY460q7tGpuydry+oQAxAA==\n"+
+        "-----END PKCS7-----\n";
+
+    private static byte[] sm_root = Base64.decode(
+        "MIICwzCCAmmgAwIBAgIIIBQGIgAAAAMwCgYIKoEcz1UBg3UwgdgxCzAJBgNVBAYT" +
+            "AkNOMRIwEAYDVQQIDAnmsZ/oi4/nnIExEjAQBgNVBAcMCeWNl+S6rOW4gjE8MDoG" +
+            "A1UECgwz5rGf6IuP55yB55S15a2Q5ZWG5Yqh5pyN5Yqh5Lit5b+D5pyJ6ZmQ6LSj" +
+            "5Lu75YWs5Y+4MUswSQYDVQQLDELmsZ/oi4/nnIHnlLXlrZDllYbliqHmnI3liqHk" +
+            "uK3lv4PmnInpmZDotKPku7vlhazlj7jlronlhajkuovkuJrpg6gxFjAUBgNVBAMM" +
+            "DUpTQ0FfUk9PVF9TTTIwHhcNMTQwNjIyMDQ1MzAyWhcNMzQwNjIyMDQ1MzAyWjCB" +
+            "1jELMAkGA1UEBhMCQ04xEjAQBgNVBAgMCeaxn+iLj+ecgTESMBAGA1UEBwwJ5Y2X" +
+            "5Lqs5biCMTwwOgYDVQQKDDPmsZ/oi4/nnIHnlLXlrZDllYbliqHmnI3liqHkuK3l" +
+            "v4PmnInpmZDotKPku7vlhazlj7gxSzBJBgNVBAsMQuaxn+iLj+ecgeeUteWtkOWV" +
+            "huWKoeacjeWKoeS4reW/g+aciemZkOi0o+S7u+WFrOWPuOWuieWFqOS6i+S4mumD" +
+            "qDEUMBIGA1UEAwwLSlNDQV9DQV9TTTIwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNC" +
+            "AAS/gvW90+LvyXPgpR7L0pwlVoZQdan7V5YQMEpxt47tzer31/8WJIfldx9NL/1A" +
+            "swkk6ItveCVW5k0u+IIk6crLox0wGzAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIB" +
+            "BjAKBggqgRzPVQGDdQNIADBFAiEAy9NkogihHCj9Jx0ZiHdkMyCHF0wHWX58KZco" +
+            "CW5mjbgCIC9cAyuVV91ygLWk14PDuIAPFWKm6rJPXbiZL6KzwHQA");
+
+    private static byte[] sm_ca = Base64.decode(
+         "MIIC/TCCAqKgAwIBAgIIIBYDKQETeGQwCgYIKoEcz1UBg3UwgccxCzAJBgNVBAYT" +
+             "AkNOMRIwEAYDVQQIDAnmsZ/oi4/nnIExEjAQBgNVBAcMCeWNl+S6rOW4gjE8MDoG" +
+             "A1UECgwz5rGf6IuP55yB55S15a2Q5ZWG5Yqh5pyN5Yqh5Lit5b+D5pyJ6ZmQ6LSj" +
+             "5Lu75YWs5Y+4MTwwOgYDVQQLDDPmsZ/oi4/nnIHnlLXlrZDllYbliqHmnI3liqHk" +
+             "uK3lv4PmnInpmZDotKPku7vlhazlj7gxFDASBgNVBAMMC0pTQ0FfQ0FfU00yMB4X" +
+             "DTE2MDMyOTA3MzQxOVoXDTIxMDMyOTA3MzQxOVowejENMAsGA1UEAxMEaG9zdDEL" +
+             "MAkGA1UECxMCMTExETAPBgNVBAoTCEFCQyBsdGQuMQswCQYDVQQHEwJOSjELMAkG" +
+             "A1UECBMCSlMxIjAgBgRVBC0RExhEOURGQThBN0NFMDg5QTg0Q0Q4Q0RCQjYxCzAJ" +
+             "BgNVBAYTAkNOMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEaTG1mpejjdsNRr2q" +
+             "p3ZC0pPXuBO19sNhIJEG6cMSi/kE1hNDosCBRhpr2gOqKP9bXHrIhVGe41Z9Ci8L" +
+             "jf/hpaOBwzCBwDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIEsDAdBgNVHSUEFjAUBggr" +
+             "BgEFBQcDAgYIKwYBBQUHAwQwHwYDVR0jBBgwFoAU/9NocgiO5XrE+eYsU0VOkaSx" +
+             "egMwRwYIKwYBBQUHAQEEOzA5MDcGCCsGAQUFBzAChitodHRwOi8vMTAuMTA4LjUu" +
+             "Mjo4ODgwL2Rvd25sb2FkL0pTQ0FfQ0EuY2VyMB0GA1UdDgQWBBQQ80pId+SJS9uP" +
+             "aZaItbNdEE2C0zAKBggqgRzPVQGDdQNJADBGAiEAogpBxL3Cc4P4v+FvQsnCgCZs" +
+             "oSdFZLZDB4uDlOIqU9wCIQDXmE1iiCsWi1RmdoY+/ics2ZlY8vyHWBJnZ+XFy1Jb" +
+             "fA==");
+
+    private static byte[] sm_sign = Base64.decode(
+        "MIID9zCCA5ygAwIBAgIIIBcEJwKSCCMwCgYIKoEcz1UBg3UwgccxCzAJBgNVBAYT" +
+        "AkNOMRIwEAYDVQQIDAnmsZ/oi4/nnIExEjAQBgNVBAcMCeWNl+S6rOW4gjE8MDoG" +
+        "A1UECgwz5rGf6IuP55yB55S15a2Q5ZWG5Yqh5pyN5Yqh5Lit5b+D5pyJ6ZmQ6LSj" +
+        "5Lu75YWs5Y+4MTwwOgYDVQQLDDPmsZ/oi4/nnIHnlLXlrZDllYbliqHmnI3liqHk" +
+        "uK3lv4PmnInpmZDotKPku7vlhazlj7gxFDASBgNVBAMMC0pTQ0FfQ0FfU00yMB4X" +
+        "DTE3MDQyNzAwMzkwNVoXDTE4MDQyNzAwMzkwNVowggEdMQ4wDAYDVQRYDAUwMDAw" +
+        "MTESMBAGA1UEGgwJ5biC6L6W5Yy6MRswGQYDVQQBDBIzMjAxMTIxOTgxMDUxMTAw" +
+        "MTQxDTALBgRVBIhYDAM0NTYxDTALBgRVBIhXDAMxMjMxEjAQBgNVBC0MCXVzZXJD" +
+        "ZXJ0MjELMAkGA1UEBhMCQ04xEjAQBgNVBAgMCeaxn+iLj+ecgTESMBAGA1UEBwwJ" +
+        "5Y2X5Lqs5biCMQwwCgYDVQQLDAMwMDgxHzAdBgkqhkiG9w0BCQEWEDMyNzMyMTU2" +
+        "OEBxcS5jb20xITAfBgNVBCoMGOa1i+ivlee9keWFs1NNMueul+azlTEyMzEhMB8G" +
+        "A1UEAwwY5rWL6K+V572R5YWzU00y566X5rOVMTIzMFkwEwYHKoZIzj0CAQYIKoEc" +
+        "z1UBgi0DQgAEdbrBzy2y8Gz4grOF23iaDipPhRPQRApAMIAP0cAuL1tATFjFuWJs" +
+        "pBc1cnCZmsOJnVpV4W7VF8hNOaqv3Tq4NqOCARcwggETMAkGA1UdEwQCMAAwCwYD" +
+        "VR0PBAQDAgbAMB0GA1UdDgQWBBRsWSOQDniy75t7UEvTXugwfq0HpzAfBgNVHSME" +
+        "GDAWgBT/02hyCI7lesT55ixTRU6RpLF6AzAxBgNVHSUEKjAoBggrBgEFBQcDAgYI" +
+        "KwYBBQUHAwgGCCsGAQUFBwMEBggrBgEFBQcDCDA9BgNVHR8ENjA0MDKgMKAuhixo" +
+        "dHRwOi8vY3JsLmpzY2EuY29tLmNuL2NybC9TTTJDUkxfRU5USVRZLmNybDBHBggr" +
+        "BgEFBQcBAQQ7MDkwNwYIKwYBBQUHMAKBK2h0dHA6Ly8xMC4xMDguNS4yOjg4ODAv" +
+        "ZG93bmxvYWQvSlNDQV9DQS5jZXIwCgYIKoEcz1UBg3UDSQAwRgIhALFoMoA1+uO4" +
+        "tXfmoyePz1pmv0CWPBgEP1EfDeS6FPitAiEAjHJYq7ryHKULqpRg6ph9r+xUDoWd" +
+        "0TPMOQ9jj4XJPO4=");
+
     private PublicKey dudPublicKey = new PublicKey() 
     {
         public String getAlgorithm()
@@ -1184,6 +1297,7 @@ public class CertTest
             Certificate cert = fact.generateCertificate(bIn);
 
             PublicKey    k = cert.getPublicKey();
+
             // System.out.println(cert);
         }
         catch (Exception e)
@@ -1480,6 +1594,8 @@ public class CertTest
         //
         InputStream in = new ByteArrayInputStream(pkcs7CrlProblem);
         Collection certCol = cf.generateCertificates(in);
+
+        in.reset();
         Collection crlCol = cf.generateCRLs(in);
 
         if (crlCol.size() != 0)
@@ -1488,6 +1604,22 @@ public class CertTest
         }
 
         if (certCol.size() != 4)
+        {
+            fail("wrong number of Certs: " + certCol.size());
+        }
+
+        in = new ByteArrayInputStream(pemPKCS7.getBytes("US-ASCII"));
+        certCol = cf.generateCertificates(in);
+
+        in.reset();
+        crlCol = cf.generateCRLs(in);
+
+        if (crlCol.size() != 0)
+        {
+            fail("wrong number of CRLs: " + crlCol.size());
+        }
+
+        if (certCol.size() != 2)
         {
             fail("wrong number of Certs: " + certCol.size());
         }
@@ -1649,6 +1781,17 @@ public class CertTest
         isTrue("collection not empty", certs2.isEmpty());
     }
 
+    private void invalidCRLs()
+        throws Exception
+    {
+        CertificateFactory certFact = CertificateFactory.getInstance("X.509", "BC");
+
+        Collection crls = certFact.generateCRLs(this.getClass().getResourceAsStream("cert_chain.txt"));
+        isTrue("multi crl", crls.isEmpty());
+        CRL crl = certFact.generateCRL(this.getClass().getResourceAsStream("cert_chain.txt"));
+        isTrue("single crl", crl == null);
+    }
+
     private void pemFileTestWithNl()
         throws Exception
     {
@@ -1695,6 +1838,7 @@ public class CertTest
         checkCertificate(5, cert5);
         checkCertificate(6, oldEcdsa);
         checkCertificate(7, cert7);
+        checkCertificate(8, sm_sign);
 
         checkComparison(cert1);
 
@@ -1735,7 +1879,9 @@ public class CertTest
         pemFileTestWithNl();
         pkcs7Test();
         rfc4491Test();
-        
+
+        invalidCRLs();
+
         testForgedSignature();
 
         checkCertificate(18, emptyDNCert);

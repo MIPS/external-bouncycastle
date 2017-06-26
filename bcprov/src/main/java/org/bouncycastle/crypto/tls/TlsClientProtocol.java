@@ -133,11 +133,9 @@ public class TlsClientProtocol
         return tlsClient;
     }
 
-    protected void handleHandshakeMessage(short type, byte[] data)
+    protected void handleHandshakeMessage(short type, ByteArrayInputStream buf)
         throws IOException
     {
-        ByteArrayInputStream buf = new ByteArrayInputStream(data);
-
         if (this.resumedSession)
         {
             if (type != HandshakeType.finished || this.connection_state != CS_SERVER_HELLO)
@@ -150,7 +148,6 @@ public class TlsClientProtocol
 
             sendFinishedMessage();
             this.connection_state = CS_CLIENT_FINISHED;
-            this.connection_state = CS_END;
 
             completeHandshake();
             return;
@@ -246,7 +243,6 @@ public class TlsClientProtocol
             {
                 processFinishedMessage(buf);
                 this.connection_state = CS_SERVER_FINISHED;
-                this.connection_state = CS_END;
 
                 completeHandshake();
                 break;
@@ -386,10 +382,19 @@ public class TlsClientProtocol
                 sendClientKeyExchangeMessage();
                 this.connection_state = CS_CLIENT_KEY_EXCHANGE;
 
+                if (TlsUtils.isSSL(getContext()))
+                {
+                    establishMasterSecret(getContext(), keyExchange);
+                }
+
                 TlsHandshakeHash prepareFinishHash = recordStream.prepareToFinish();
                 this.securityParameters.sessionHash = getCurrentPRFHash(getContext(), prepareFinishHash, null);
 
-                establishMasterSecret(getContext(), keyExchange);
+                if (!TlsUtils.isSSL(getContext()))
+                {
+                    establishMasterSecret(getContext(), keyExchange);
+                }
+
                 recordStream.setPendingConnectionState(getPeer().getCompression(), getPeer().getCipher());
 
                 if (clientCreds != null && clientCreds instanceof TlsSignerCredentials)
@@ -424,7 +429,7 @@ public class TlsClientProtocol
                 break;
             }
             default:
-                throw new TlsFatalAlert(AlertDescription.handshake_failure);
+                throw new TlsFatalAlert(AlertDescription.unexpected_message);
             }
 
             this.connection_state = CS_CLIENT_FINISHED;
@@ -810,7 +815,7 @@ public class TlsClientProtocol
             this.securityParameters.getCipherSuite());
 
         /*
-         * RFC 5264 7.4.9. Any cipher suite which does not explicitly specify
+         * RFC 5246 7.4.9. Any cipher suite which does not explicitly specify
          * verify_data_length has a verify_data_length equal to 12. This includes all
          * existing cipher suites.
          */
