@@ -26,9 +26,8 @@ import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-// BEGIN android-removed
+// Android-removed: Unsupported algorithm
 // import org.bouncycastle.crypto.encodings.ISO9796d1Encoding;
-// END android-removed
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSABlindedEngine;
@@ -203,12 +202,12 @@ public class CipherSpi
         {
             cipher = new PKCS1Encoding(new RSABlindedEngine());
         }
-        // BEGIN android-removed
+        // BEGIN Android-removed: Unsupported algorithm
         // else if (pad.equals("ISO9796-1PADDING"))
         // {
         //     cipher = new ISO9796d1Encoding(new RSABlindedEngine());
         // }
-        // END android-removed
+        // END Android-removed: Unsupported algorithm
         else if (pad.equals("OAEPWITHMD5ANDMGF1PADDING"))
         {
             initFromSpec(new OAEPParameterSpec("MD5", "MGF1", new MGF1ParameterSpec("MD5"), PSource.PSpecified.DEFAULT));
@@ -237,27 +236,29 @@ public class CipherSpi
         {
             initFromSpec(new OAEPParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, PSource.PSpecified.DEFAULT));
         }
-        // BEGIN android-removed
-        // else if (pad.equals("OAEPWITHSHA3-224ANDMGF1PADDING"))
-        // {
-        //     initFromSpec(new OAEPParameterSpec("SHA3-224", "MGF1", new MGF1ParameterSpec("SHA3-224"), PSource.PSpecified.DEFAULT));
-        // }
-        // else if (pad.equals("OAEPWITHSHA3-256ANDMGF1PADDING"))
-        // {
-        //     initFromSpec(new OAEPParameterSpec("SHA3-256", "MGF1", new MGF1ParameterSpec("SHA3-256"), PSource.PSpecified.DEFAULT));
-        // }
-        // else if (pad.equals("OAEPWITHSHA3-384ANDMGF1PADDING"))
-        // {
-        //     initFromSpec(new OAEPParameterSpec("SHA3-384", "MGF1", new MGF1ParameterSpec("SHA3-384"), PSource.PSpecified.DEFAULT));
-        // }
-        // else if (pad.equals("OAEPWITHSHA3-512ANDMGF1PADDING"))
-        // {
-        //     initFromSpec(new OAEPParameterSpec("SHA3-512", "MGF1", new MGF1ParameterSpec("SHA3-512"), PSource.PSpecified.DEFAULT));
-        // }
-        // END android-removed
+        // BEGIN Android-removed: Unsupported algorithms
+        /*
+        else if (pad.equals("OAEPWITHSHA3-224ANDMGF1PADDING"))
+        {
+            initFromSpec(new OAEPParameterSpec("SHA3-224", "MGF1", new MGF1ParameterSpec("SHA3-224"), PSource.PSpecified.DEFAULT));
+        }
+        else if (pad.equals("OAEPWITHSHA3-256ANDMGF1PADDING"))
+        {
+            initFromSpec(new OAEPParameterSpec("SHA3-256", "MGF1", new MGF1ParameterSpec("SHA3-256"), PSource.PSpecified.DEFAULT));
+        }
+        else if (pad.equals("OAEPWITHSHA3-384ANDMGF1PADDING"))
+        {
+            initFromSpec(new OAEPParameterSpec("SHA3-384", "MGF1", new MGF1ParameterSpec("SHA3-384"), PSource.PSpecified.DEFAULT));
+        }
+        else if (pad.equals("OAEPWITHSHA3-512ANDMGF1PADDING"))
+        {
+            initFromSpec(new OAEPParameterSpec("SHA3-512", "MGF1", new MGF1ParameterSpec("SHA3-512"), PSource.PSpecified.DEFAULT));
+        }
+        */
+        // END Android-removed: Unsupported algorithms
         else
         {
-             throw new NoSuchPaddingException(padding + " unavailable with RSA.");
+            throw new NoSuchPaddingException(padding + " unavailable with RSA.");
         }
     }
 
@@ -562,50 +563,52 @@ public class CipherSpi
         }
     }
 
-    // BEGIN android-removed
-    // static public class PKCS1v1_5Padding
-    //     extends CipherSpi
-    // {
-    //     public PKCS1v1_5Padding()
-    //     {
-    //         super(new PKCS1Encoding(new RSABlindedEngine()));
-    //     }
-    // }
-    //
-    // static public class PKCS1v1_5Padding_PrivateOnly
-    //     extends CipherSpi
-    // {
-    //     public PKCS1v1_5Padding_PrivateOnly()
-    //     {
-    //         super(false, true, new PKCS1Encoding(new RSABlindedEngine()));
-    //     }
-    // }
-    //
-    // static public class PKCS1v1_5Padding_PublicOnly
-    //     extends CipherSpi
-    // {
-    //     public PKCS1v1_5Padding_PublicOnly()
-    //     {
-    //         super(true, false, new PKCS1Encoding(new RSABlindedEngine()));
-    //     }
-    // }
-    //
-    // static public class OAEPPadding
-    //     extends CipherSpi
-    // {
-    //     public OAEPPadding()
-    //     {
-    //         super(OAEPParameterSpec.DEFAULT);
-    //     }
-    // }
-    //
-    // static public class ISO9796d1Padding
-    //     extends CipherSpi
-    // {
-    //     public ISO9796d1Padding()
-    //     {
-    //         super(new ISO9796d1Encoding(new RSABlindedEngine()));
-    //     }
-    // }
-    // END android-removed
+    // BEGIN Android-removed: Unsupported algorithms
+    /*
+    static public class PKCS1v1_5Padding
+        extends CipherSpi
+    {
+        public PKCS1v1_5Padding()
+        {
+            super(new PKCS1Encoding(new RSABlindedEngine()));
+        }
+    }
+
+    static public class PKCS1v1_5Padding_PrivateOnly
+        extends CipherSpi
+    {
+        public PKCS1v1_5Padding_PrivateOnly()
+        {
+            super(false, true, new PKCS1Encoding(new RSABlindedEngine()));
+        }
+    }
+
+    static public class PKCS1v1_5Padding_PublicOnly
+        extends CipherSpi
+    {
+        public PKCS1v1_5Padding_PublicOnly()
+        {
+            super(true, false, new PKCS1Encoding(new RSABlindedEngine()));
+        }
+    }
+
+    static public class OAEPPadding
+        extends CipherSpi
+    {
+        public OAEPPadding()
+        {
+            super(OAEPParameterSpec.DEFAULT);
+        }
+    }
+    
+    static public class ISO9796d1Padding
+        extends CipherSpi
+    {
+        public ISO9796d1Padding()
+        {
+            super(new ISO9796d1Encoding(new RSABlindedEngine()));
+        }
+    }
+    */
+    // END Android-removed: Unsupported algorithms
 }
