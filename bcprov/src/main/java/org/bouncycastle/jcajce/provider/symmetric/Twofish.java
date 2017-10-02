@@ -134,6 +134,7 @@ public final class Twofish
             // provider.addAlgorithm("AlgorithmParameters.Twofish", PREFIX + "$AlgParams");
             // END Android-removed: Unsupported algorithms
 
+            // Android-note: These algorithms are necessary for KeyStore.BouncyCastle
             provider.addAlgorithm("Alg.Alias.AlgorithmParameters.PBEWITHSHAANDTWOFISH", "PKCS12PBE");
             provider.addAlgorithm("Alg.Alias.AlgorithmParameters.PBEWITHSHAANDTWOFISH-CBC", "PKCS12PBE");
             provider.addAlgorithm("Cipher.PBEWITHSHAANDTWOFISH-CBC",  PREFIX + "$PBEWithSHA");
