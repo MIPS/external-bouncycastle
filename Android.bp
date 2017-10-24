@@ -82,6 +82,7 @@ java_library {
 // not be stripped. See b/24535627.
 java_library {
     name: "bouncycastle-testdex",
+    defaults: ["bouncycastle-defaults"],
 
     static_libs: ["bouncycastle-nojarjar"],
     libs: ["conscrypt"],
