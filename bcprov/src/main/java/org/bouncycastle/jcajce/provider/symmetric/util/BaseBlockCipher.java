@@ -272,7 +272,12 @@ public class BaseBlockCipher
                 try
                 {
                     engineParams = createParametersInstance(name);
-                    engineParams.init(ivParam.getIV());
+                    // Android-changed: Use IvParameterSpec instead of passing raw bytes.
+                    // The documentation of init() says that a byte array should be decoded
+                    // as ASN.1, and Conscrypt's implementations follow that requirement,
+                    // even though Bouncy Castle's implementations don't.  Wrapping it in
+                    // an IvParameterSpec makes the interpretation unambiguous to both.
+                    engineParams.init(new IvParameterSpec(ivParam.getIV()));
                 }
                 catch (Exception e)
                 {

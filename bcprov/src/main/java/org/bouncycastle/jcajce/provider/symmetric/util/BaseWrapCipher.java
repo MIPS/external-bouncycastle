@@ -34,7 +34,9 @@ import org.bouncycastle.crypto.Wrapper;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
-import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+// Android-changed: Use default provider for JCA algorithms instead of BC
+// Was: import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+import org.bouncycastle.jcajce.util.DefaultJcaJceHelper;
 import org.bouncycastle.jcajce.util.JcaJceHelper;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Arrays;
@@ -67,7 +69,9 @@ public abstract class BaseWrapCipher
     private int                       ivSize;
     private byte[]                    iv;
 
-    private final JcaJceHelper helper = new BCJcaJceHelper();
+    // Android-changed: Use default provider for JCA algorithms instead of BC
+    // Was: private final JcaJceHelper helper = new BCJcaJceHelper();
+    private final JcaJceHelper helper = new DefaultJcaJceHelper();
 
     protected BaseWrapCipher()
     {

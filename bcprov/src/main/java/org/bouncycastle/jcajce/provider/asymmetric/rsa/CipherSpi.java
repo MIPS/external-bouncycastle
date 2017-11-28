@@ -35,14 +35,18 @@ import org.bouncycastle.crypto.params.ParametersWithRandom;
 import org.bouncycastle.jcajce.provider.asymmetric.util.BaseCipherSpi;
 import org.bouncycastle.jcajce.provider.util.BadBlockException;
 import org.bouncycastle.jcajce.provider.util.DigestFactory;
-import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+// Android-changed: Use default provider for JCA algorithms instead of BC
+// Was: import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+import org.bouncycastle.jcajce.util.DefaultJcaJceHelper;
 import org.bouncycastle.jcajce.util.JcaJceHelper;
 import org.bouncycastle.util.Strings;
 
 public class CipherSpi
     extends BaseCipherSpi
 {
-    private final JcaJceHelper helper = new BCJcaJceHelper();
+    // Android-changed: Use default provider for JCA algorithms instead of BC
+    // Was: private final JcaJceHelper helper = new BCJcaJceHelper();
+    private final JcaJceHelper helper = new DefaultJcaJceHelper();
 
     private AsymmetricBlockCipher cipher;
     private AlgorithmParameterSpec paramSpec;
