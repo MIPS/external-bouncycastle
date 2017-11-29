@@ -159,8 +159,6 @@ public final class DES
             super(new RFC3211WrapEngine(new DESEngine()), 8);
         }
     }
-    */
-    // END Android-removed: Unsupported algorithms
 
     public static class AlgParamGen
         extends BaseAlgorithmParameterGenerator
@@ -199,6 +197,8 @@ public final class DES
             return params;
         }
     }
+    */
+    // END Android-removed: Unsupported algorithms
 
   /**
      * DES - the default for this is to generate a key in
