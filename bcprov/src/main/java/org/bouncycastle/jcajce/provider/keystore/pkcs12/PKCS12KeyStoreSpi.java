@@ -97,7 +97,9 @@ import org.bouncycastle.jcajce.PKCS12StoreParameter;
 // Android-removed: Unsupported algorithms
 // import org.bouncycastle.jcajce.spec.GOST28147ParameterSpec;
 import org.bouncycastle.jcajce.spec.PBKDF2KeySpec;
-import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+// Android-changed: Use default provider for JCA algorithms instead of BC
+// Was: import org.bouncycastle.jcajce.util.BCJcaJceHelper;
+import org.bouncycastle.jcajce.util.DefaultJcaJceHelper;
 import org.bouncycastle.jcajce.util.JcaJceHelper;
 import org.bouncycastle.jce.interfaces.BCKeyStore;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
@@ -112,7 +114,9 @@ public class PKCS12KeyStoreSpi
     extends KeyStoreSpi
     implements PKCSObjectIdentifiers, X509ObjectIdentifiers, BCKeyStore
 {
-    private final JcaJceHelper helper = new BCJcaJceHelper();
+    // Android-changed: Use default provider for JCA algorithms instead of BC
+    // Was: private final JcaJceHelper helper = new BCJcaJceHelper();
+    private final JcaJceHelper helper = new DefaultJcaJceHelper();
 
     private static final int SALT_SIZE = 20;
     private static final int MIN_ITERATIONS = 1024;
