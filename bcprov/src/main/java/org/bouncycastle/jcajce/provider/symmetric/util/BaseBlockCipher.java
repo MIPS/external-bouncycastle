@@ -492,8 +492,6 @@ public class BaseBlockCipher
     }
 
     // BEGIN Android-added: Handling missing IVs
-    // TODO(27995180): This might need to be removed if we drop support for BCPBE keys without IV
-    // in PKCS12
     private boolean isBCPBEKeyWithoutIV(Key key) {
         return (key instanceof BCPBEKey) && !(((BCPBEKey)key).getParam() instanceof ParametersWithIV);
     }
@@ -534,7 +532,6 @@ public class BaseBlockCipher
         //
         // BEGIN Android-changed: Don't use PKCS12 with missing IV.
         // If the key is a BCPBE one without an IV, ignore the fact that the scheme is PKCS12.
-        // TODO(27995180): consider whether we want to keep support for these keys and PKCS12.
         // if (scheme == PKCS12 || key instanceof PKCS12Key)
         if ((scheme == PKCS12 || key instanceof PKCS12Key) && !isBCPBEKeyWithoutIV(key))
         // END Android-changed: Don't use PKCS12 with missing IV.
@@ -581,9 +578,7 @@ public class BaseBlockCipher
                 else if (pbeKeyParam == null)
                 {
                     // BEGIN Android-changed: Unreachable code
-                    // TODO(27995180): consider rejecting such keys for PKCS12
-                    // See above for the android-changed with a TODO for the same bug that makes
-                    // this code unreachable.
+                    // See above for the Android change that makes this code unreachable.
                     // param = PBE.Util.makePBEParameters(k.getEncoded(), PKCS12, digest, keySizeInBits, ivLength * 8, pbeSpec, cipher.getAlgorithmName());
                     throw new AssertionError("Unreachable code");
                     // END Android-changed: Unreachable code
@@ -880,31 +875,56 @@ public class BaseBlockCipher
             {
                 byte[]  iv = new byte[ivLength];
 
-                // BEGIN Android-changed: For PBE keys with no IV, use IV of 0 rather than random
-                // TODO(27995180): for such keys, consider whether we want to reject them or
-                // allow them if the IV is passed in the parameters
+                // BEGIN Android-changed: For PBE keys with no IV, log and use IV of 0
+                // These keys were accepted in BC 1.52 (and treated as having an IV of 0) but
+                // rejected outright in BC 1.54 (even if an IV was passed in params).  We
+                // want the eventual state to be that an IV can be passed in params, but the key
+                // is rejected otherwise.  For now, log that these will be rejected in a future
+                // release.  See b/27995180 for historical details.
                 // ivRandom.nextBytes(iv);
                 if (!isBCPBEKeyWithoutIV(key)) {
                     ivRandom.nextBytes(iv);
+                } else {
+                    // TODO(b/70275132): Change to rejecting these keys
+                    System.err.println(" ******** DEPRECATED FUNCTIONALITY ********");
+                    System.err.println(" * You have initialized a cipher with a PBE key with no IV and");
+                    System.err.println(" * have not provided an IV in the AlgorithmParameterSpec.  This");
+                    System.err.println(" * configuration is deprecated.  The cipher will be initialized");
+                    System.err.println(" * with an all-zero IV, but in a future release this call will");
+                    System.err.println(" * throw an exception.");
+                    new InvalidAlgorithmParameterException("No IV set when using PBE key")
+                            .printStackTrace(System.err);
                 }
-                // END Android-changed: For PBE keys with no IV, use IV of 0 rather than random
+                // END Android-changed: For PBE keys with no IV, log and use IV of 0
                 param = new ParametersWithIV(param, iv);
                 ivParam = (ParametersWithIV)param;
             }
             else if (cipher.getUnderlyingCipher().getAlgorithmName().indexOf("PGPCFB") < 0)
             {
-                // BEGIN Android-changed: For PBE keys with no IV, use IV of 0
-                // TODO(27995180): for such keys, consider whether we want to reject them or
-                // allow them if the IV is passed in the parameters
+                // BEGIN Android-changed: For PBE keys with no IV, log and use IV of 0
+                // These keys were accepted in BC 1.52 (and treated as having an IV of 0) but
+                // rejected outright in BC 1.54 (even if an IV was passed in params).  We
+                // want the eventual state to be that an IV can be passed in params, but the key
+                // is rejected otherwise.  For now, log that these will be rejected in a future
+                // release.  See b/27995180 for historical details.
                 // throw new InvalidAlgorithmParameterException("no IV set when one expected");
                 if (!isBCPBEKeyWithoutIV(key)) {
                     throw new InvalidAlgorithmParameterException("no IV set when one expected");
                 } else {
+                    // TODO(b/70275132): Change to rejecting these keys
+                    System.err.println(" ******** DEPRECATED FUNCTIONALITY ********");
+                    System.err.println(" * You have initialized a cipher with a PBE key with no IV and");
+                    System.err.println(" * have not provided an IV in the AlgorithmParameterSpec.  This");
+                    System.err.println(" * configuration is deprecated.  The cipher will be initialized");
+                    System.err.println(" * with an all-zero IV, but in a future release this call will");
+                    System.err.println(" * throw an exception.");
+                    new InvalidAlgorithmParameterException("No IV set when using PBE key")
+                            .printStackTrace(System.err);
                     // Mimic behaviour in 1.52 by using an IV of 0's
                     param = new ParametersWithIV(param, new byte[ivLength]);
                     ivParam = (ParametersWithIV)param;
                 }
-                // END Android-changed: For PBE keys with no IV, use IV of 0
+                // END Android-changed: For PBE keys with no IV, log and use IV of 0
             }
         }
 
