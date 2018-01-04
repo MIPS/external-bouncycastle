@@ -135,18 +135,26 @@ java_library_static {
 
 // OCSP classes used for testing
 java_library_static {
-    name: "bouncycastle-ocsp",
+    name: "bouncycastle-ocsp-nojarjar",
     defaults: ["bouncycastle-defaults"],
 
     srcs: [
         "bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java",
         "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
     ],
+    no_framework_libs: true,
     libs: [
         "bouncycastle-nojarjar",
         "bouncycastle-bcpkix-nojarjar",
         "conscrypt",
     ],
+}
+
+java_library_static {
+    name: "bouncycastle-ocsp",
+    defaults: ["bouncycastle-defaults"],
+
+    static_libs: ["bouncycastle-ocsp-nojarjar"],
     jarjar_rules: "jarjar-rules.txt",
     java_version: "1.7",
     no_framework_libs: true,
