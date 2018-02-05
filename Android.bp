@@ -112,6 +112,7 @@ java_library_static {
     srcs: ["bcpkix/src/main/java/**/*.java"],
     exclude_srcs: ["bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java"],
     no_framework_libs: true,
+    java_version: "1.7",
     libs: [
         "bouncycastle-nojarjar",
         "conscrypt",
@@ -125,6 +126,7 @@ java_library_static {
     static_libs: ["bouncycastle-bcpkix-nojarjar"],
     libs: ["conscrypt"],
     no_framework_libs: true,
+    java_version: "1.7",
 
     target: {
         android: {
@@ -142,6 +144,7 @@ java_library_static {
         "bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java",
         "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
     ],
+    java_version: "1.7",
     no_framework_libs: true,
     libs: [
         "bouncycastle-nojarjar",
