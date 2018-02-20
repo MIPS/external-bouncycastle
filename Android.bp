@@ -14,10 +14,22 @@
 // limitations under the License.
 //
 
+java_defaults {
+    name: "bouncycastle-errorprone-defaults",
+    errorprone: {
+        javacflags: [
+            "-Xep:MissingOverride:OFF",  // Ignore missing @Override.
+        ],
+    },
+}
+
 // These cannot build in the PDK, because the PDK requires all libraries
 // compile against SDK versions.
 java_defaults {
     name: "bouncycastle-defaults",
+    defaults: [
+        "bouncycastle-errorprone-defaults",
+    ],
     host_supported: true,
     hostdex: true,
     target: {
@@ -94,6 +106,9 @@ java_library {
 // unbundled bouncycastle jar
 java_library_static {
     name: "bouncycastle-unbundled",
+    defaults: [
+        "bouncycastle-errorprone-defaults",
+    ],
 
     sdk_version: "9",
     srcs: ["bcprov/src/main/java/**/*.java"],
