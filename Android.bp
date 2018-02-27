@@ -45,7 +45,7 @@ java_defaults {
 
 // non-jarjar version to build okhttp-tests
 java_library_static {
-    name: "bouncycastle-nojarjar",
+    name: "bouncycastle-unbundled",
     defaults: ["bouncycastle-defaults"],
 
     srcs: ["bcprov/src/main/java/**/*.java"],
@@ -53,7 +53,7 @@ java_library_static {
         "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
     ],
 
-    no_framework_libs: true,
+    sdk_version: "9",
     java_version: "1.7",
 }
 
@@ -61,7 +61,7 @@ java_library {
     name: "bouncycastle",
     defaults: ["bouncycastle-defaults"],
 
-    static_libs: ["bouncycastle-nojarjar"],
+    static_libs: ["bouncycastle-unbundled"],
     no_framework_libs: true,
     java_version: "1.7",
 
@@ -79,45 +79,18 @@ java_library {
     name: "bouncycastle-testdex",
     defaults: ["bouncycastle-defaults"],
 
-    static_libs: ["bouncycastle-nojarjar"],
+    static_libs: ["bouncycastle-unbundled"],
     no_framework_libs: true,
     jarjar_rules: "jarjar-rules.txt",
     java_version: "1.7",
 }
 
-// unbundled bouncycastle jar
-java_library_static {
-    name: "bouncycastle-unbundled",
-    defaults: [
-        "bouncycastle-errorprone-defaults",
-    ],
-
-    sdk_version: "9",
-    srcs: ["bcprov/src/main/java/**/*.java"],
-    exclude_srcs: [
-        "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
-    ],
-}
-
 // PKIX classes used for testing
-java_library_static {
-    name: "bouncycastle-bcpkix-nojarjar",
-    defaults: ["bouncycastle-defaults"],
-
-    srcs: ["bcpkix/src/main/java/**/*.java"],
-    exclude_srcs: ["bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java"],
-    no_framework_libs: true,
-    java_version: "1.7",
-    libs: [
-        "bouncycastle-nojarjar",
-    ],
-}
-
 java_library_static {
     name: "bouncycastle-bcpkix",
     defaults: ["bouncycastle-defaults"],
 
-    static_libs: ["bouncycastle-bcpkix-nojarjar"],
+    static_libs: ["bouncycastle-bcpkix-unbundled"],
     no_framework_libs: true,
     java_version: "1.7",
 
@@ -128,31 +101,41 @@ java_library_static {
     },
 }
 
-// OCSP classes used for testing
 java_library_static {
-    name: "bouncycastle-ocsp-nojarjar",
-    defaults: ["bouncycastle-defaults"],
-
-    srcs: [
-        "bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java",
-        "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
+    name: "bouncycastle-bcpkix-unbundled",
+    defaults: [
+        "bouncycastle-defaults",
     ],
-    java_version: "1.7",
-    no_framework_libs: true,
-    libs: [
-        "bouncycastle-nojarjar",
-        "bouncycastle-bcpkix-nojarjar",
-    ],
+    libs: [ "bouncycastle-unbundled" ],
+    sdk_version: "9",
+    srcs: ["bcpkix/src/main/java/**/*.java"],
+    exclude_srcs: ["bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java"],
 }
 
+
+// OCSP classes used for testing
 java_library_static {
     name: "bouncycastle-ocsp",
     defaults: ["bouncycastle-defaults"],
 
-    static_libs: ["bouncycastle-ocsp-nojarjar"],
+    static_libs: ["bouncycastle-ocsp-unbundled"],
     jarjar_rules: "jarjar-rules.txt",
     java_version: "1.7",
     no_framework_libs: true,
+}
+
+java_library_static {
+    name: "bouncycastle-ocsp-unbundled",
+    defaults: [
+        "bouncycastle-defaults",
+    ],
+    libs: [ "bouncycastle-unbundled",
+            "bouncycastle-bcpkix-unbundled" ],
+    sdk_version: "9",
+    srcs: [
+        "bcpkix/src/main/java/org/bouncycastle/cert/ocsp/**/*.java",
+        "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
+    ],
 }
 
 // For compatibilityy with old bouncycastle-host and bouncycastle-bcpkix-host names
