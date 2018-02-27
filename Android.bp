@@ -68,7 +68,6 @@ java_library_static {
             ],
         },
     },
-    libs: ["conscrypt"],
     no_framework_libs: true,
     java_version: "1.7",
 }
@@ -78,7 +77,6 @@ java_library {
     defaults: ["bouncycastle-defaults"],
 
     static_libs: ["bouncycastle-nojarjar"],
-    libs: ["conscrypt"],
     no_framework_libs: true,
     java_version: "1.7",
 
@@ -97,7 +95,6 @@ java_library {
     defaults: ["bouncycastle-defaults"],
 
     static_libs: ["bouncycastle-nojarjar"],
-    libs: ["conscrypt"],
     no_framework_libs: true,
     jarjar_rules: "jarjar-rules.txt",
     java_version: "1.7",
@@ -130,7 +127,6 @@ java_library_static {
     java_version: "1.7",
     libs: [
         "bouncycastle-nojarjar",
-        "conscrypt",
     ],
 }
 
@@ -139,7 +135,6 @@ java_library_static {
     defaults: ["bouncycastle-defaults"],
 
     static_libs: ["bouncycastle-bcpkix-nojarjar"],
-    libs: ["conscrypt"],
     no_framework_libs: true,
     java_version: "1.7",
 
@@ -164,7 +159,6 @@ java_library_static {
     libs: [
         "bouncycastle-nojarjar",
         "bouncycastle-bcpkix-nojarjar",
-        "conscrypt",
     ],
 }
 
