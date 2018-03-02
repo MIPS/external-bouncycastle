@@ -53,21 +53,6 @@ java_library_static {
         "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
     ],
 
-    target: {
-        android: {
-            // used for bouncycastle for target where we want to be sure to use OpenSSLDigest
-            exclude_srcs: [
-                "bcprov/src/main/java/org/bouncycastle/crypto/digests/AndroidDigestFactoryBouncyCastle.java",
-            ],
-        },
-        host: {
-            // used for bouncycastle for host where we can't use OpenSSLDigest
-            exclude_srcs: [
-                "bcprov/src/main/java/org/bouncycastle/crypto/digests/AndroidDigestFactoryOpenSSL.java",
-                "bcprov/src/main/java/org/bouncycastle/crypto/digests/OpenSSLDigest.java",
-            ],
-        },
-    },
     no_framework_libs: true,
     java_version: "1.7",
 }
@@ -111,8 +96,6 @@ java_library_static {
     srcs: ["bcprov/src/main/java/**/*.java"],
     exclude_srcs: [
         "bcprov/src/main/java/org/bouncycastle/asn1/ocsp/**/*.java",
-        "bcprov/src/main/java/org/bouncycastle/crypto/digests/AndroidDigestFactoryOpenSSL.java",
-        "bcprov/src/main/java/org/bouncycastle/crypto/digests/OpenSSLDigest.java",
     ],
 }
 
